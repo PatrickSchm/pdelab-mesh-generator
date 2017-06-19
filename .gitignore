@@ -1,0 +1,5 @@
+# build directories
+/build*/
+/dune/pdelab/residualcoupling/submesh*/
+# editor backup files
+*~
