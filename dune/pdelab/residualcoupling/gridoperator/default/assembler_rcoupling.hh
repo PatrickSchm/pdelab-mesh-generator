@@ -74,7 +74,7 @@ public:
         gfsuMa(gfsuMa_), gfsvMa(gfsvMa_), gfsuC(gfsuC_), gfsvC(
             gfsvC_), fracturePairs(fracturePairs_), materialFlags(
                 materialFlags_), indicesParallel(indicesParallel_), cu(cu_), cv(cv_), cuC(cuC_), cvC(
-                    cvC_), lfsuMa(gfsuMa_), lfsvMa(gfsvMa_), lfsunMa(
+                    cvC_), lfsuMa(gfsuMa_), lfsvMa(gfsvMa_), lfsuPair(gfsuMa_), lfsvPair(gfsvMa_), lfsunMa(
                         gfsuMa_), lfsvnMa(gfsvMa_), lfsuC(gfsuC_), lfsvC(
                             gfsvC_), lfsunC(gfsuC_), lfsvnC(gfsvC_)
     {
@@ -84,7 +84,7 @@ public:
                              const GFSVMA& gfsvMa_, const CU& cu_, const CV& cv_) :
         gfsuMa(gfsuMa_), gfsvMa(gfsvMa_), gfsuC(), gfsvC(), cu(
             cu_), cv(cv_), cuC(), cvC(), fracturePairs(), materialFlags(), indicesParallel(), lfsuMa(
-                gfsuMa_), lfsvMa(gfsvMa_), lfsunMa(gfsuMa_), lfsvnMa(
+                gfsuMa_), lfsvMa(gfsvMa_), lfsuPair(gfsuMa_), lfsvPair(gfsvMa_), lfsunMa(gfsuMa_), lfsvnMa(
                     gfsvMa_)
     {
     }
@@ -102,13 +102,13 @@ public:
     }
 
     //! Get the trial grid function space
-    const GFSUC& trialGridFunctionSpaceC() const
+    const GFSUC& trialGridFunctionSpaceSl() const
     {
         return gfsuC;
     }
 
     //! Get the test grid function space
-    const GFSVMA& testGridFunctionSpaceC() const
+    const GFSVMA& testGridFunctionSpaceSl() const
     {
         return gfsvC;
     }
@@ -141,6 +141,13 @@ public:
 
         LFSUMACache lfsu_cacheMaOld(lfsuMa, cu, needs_constraints_caching);
         LFSVMACache lfsv_cacheMaOld(lfsvMa, cv, needs_constraints_caching);
+
+        LFSUMACache lfsu_cachePair(lfsuPair, cu, needs_constraints_caching);
+        LFSVMACache lfsv_cachePair(lfsvPair, cv, needs_constraints_caching);
+
+        LFSUMACache lfsu_cachePairOld(lfsuPair, cu, needs_constraints_caching);
+        LFSVMACache lfsv_cachePairOld(lfsvPair, cv, needs_constraints_caching);
+
 
         LFSUMACache lfsun_cacheMa(lfsunMa, cu,
                                   needs_constraints_caching);
@@ -210,6 +217,8 @@ public:
             // Bind local test function space to element
             lfsvMa.bind( element );
             lfsv_cacheMa.update();
+            lfsv_cacheMaOld.update();
+            // Notify assembler engine about bind
 
             // Notify assembler engine about bind
             assembler_engine.onBindLFSV(eg, lfsv_cacheMa);
@@ -218,62 +227,73 @@ public:
             assembler_engine.assembleVVolume(eg, lfsv_cacheMa);
 
             // Bind local trial function space to element
-            lfsuMa.bind( element );
+            lfsuMa.bind(element);
             lfsu_cacheMa.update();
+            lfsu_cacheMaOld.update();
 
-            // Notify assembler engine about bind
+
             assembler_engine.onBindLFSUV(eg, lfsu_cacheMa, lfsv_cacheMa);
-            // assembler_engine.onBindLFSUVOld(eg, lfsu_cacheMaOld, lfsv_cacheMaOld);
+            assembler_engine.onBindLFSUVOld(eg, lfsu_cacheMaOld, lfsv_cacheMaOld);
 
             // Load coefficients of local functions
-            // assembler_engine.loadCoefficientsLFSUInsideOld(lfsu_cacheMaOld);
             assembler_engine.loadCoefficientsLFSUInside(lfsu_cacheMa);
+            assembler_engine.loadCoefficientsLFSUInsideOld(lfsu_cacheMaOld);
 
             // Volume integration
             assembler_engine.assembleUVVolume(eg, lfsu_cacheMa, lfsv_cacheMa, iMat);
 
             auto fractureElements = fracturePairs.bulkFractureCoupledElements[idsindex];
-            if (fractureElements.size() > 0) {
-                // std::cout << fracturePairs.bulkFractureCoupledElements[idsindex].size() << std::endl;
+            auto pElement = fracturePairs.bulkCoupledElements[idsindex];
+
+            if (fractureElements.size() > 0 && pElement.size() > 0) {
+
+                lfsuPair.bind(pElement[0]);
+                lfsu_cachePair.update();
+                lfsu_cachePairOld.update();
+                lfsvPair.bind(pElement[0]);
+                lfsv_cachePair.update();
+                lfsv_cachePairOld.update();
+
+
+                ElementGeometry<Element> egPair(pElement[0]);
+                assembler_engine.onBindLFSUVPair(egPair, lfsu_cachePair, lfsv_cachePair);
+                assembler_engine.onBindLFSUVPairOld(egPair, lfsu_cachePairOld, lfsv_cachePairOld);
+                assembler_engine.loadCoefficientsLFSUInsidePair(lfsu_cachePair);
+                assembler_engine.loadCoefficientsLFSUInsidePairOld(lfsu_cachePairOld);
 
                 auto cBegin = fracturePairs.bulkFractureCoupledElements[idsindex].begin();
                 auto cEnd = fracturePairs.bulkFractureCoupledElements[idsindex].end();
-
                 for (auto & cElement = cBegin; cElement != cEnd; cElement++) {
-
                     ElementGeometry<ElementC> egC(*cElement);
+
                     lfsuC.bind(*cElement);
                     lfsu_cacheC.update();
                     lfsvC.bind(*cElement);
                     lfsv_cacheC.update();
+
                     assembler_engine.onBindLFSUVSL(egC, lfsu_cacheC, lfsv_cacheC);
 
-                    // / Load coefficients of local functions
+                    // Load coefficients of local functions
                     assembler_engine.loadCoefficientsLFSUInsideSl(lfsu_cacheC);
                     unsigned int intersection_index = 0;
 
-                    // std::cout << "ELEMENT: " << idsindex << std::endl;
-                    // std::cout << "ELEMENT LOW: " << index_setC.index(*cElement) << std::endl;
                     for (const auto& intersection : intersections(entity_set, element))
                     {
                         IntersectionGeometry<Intersection> ig(intersection, intersection_index);
-
-                        // std::cout << "INNN 1" << std::endl;
                         // Boundary integration
-                        if (intersection.boundary())
-                            assembler_engine.assembleCBoundary(ig, egC, lfsu_cacheMa, lfsv_cacheMa, lfsu_cacheC, lfsv_cacheC);
-                        // std::cout << "INNN 2" << std::endl;
-
+                        if (intersection.boundary()) {
+                            // std::cout << "------------------------- ELEMENT: " << idsindex << std::endl;
+                            assembler_engine.assembleCBoundary(ig, egC, egPair , lfsu_cacheMa, lfsv_cacheMa, lfsu_cachePair, lfsv_cachePair, lfsu_cacheC, lfsv_cacheC);
+                        }
                         ++intersection_index;
                     }
+
                     assembler_engine.onUnbindLFSUVC(egC,
                                                     lfsu_cacheC, lfsv_cacheC);
-
                     // Notify assembler engine about unbinds
                     assembler_engine.onUnbindLFSVC(egC,
                                                    lfsv_cacheC);
                 }
-
             }
 
             // Skip if no intersection iterator is needed
@@ -432,6 +452,9 @@ private:
 // local function spaces in local cell
     mutable LFSUMA lfsuMa;
     mutable LFSVMA lfsvMa;
+    // local function spaces in local cell
+    mutable LFSUMA lfsuPair;
+    mutable LFSVMA lfsvPair;
 // local function spaces in neighbor
     mutable LFSUMA lfsunMa;
     mutable LFSVMA lfsvnMa;

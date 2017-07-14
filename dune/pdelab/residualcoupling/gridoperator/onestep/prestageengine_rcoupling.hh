@@ -183,7 +183,7 @@ public:
     {
     }
 
-        template<typename LFSU>
+    template<typename LFSU>
     void loadCoefficientsLFSUInsideOld(const LFSU & lfsu_s)
     {
     }
@@ -292,9 +292,9 @@ public:
     }
 
 
-    template<typename IG, typename EGC, typename LFSU, typename LFSV, typename LFSUC, typename LFSVC>
-    void assembleCBoundary(const IG& ig, const EGC& egC,
-                           const LFSU& lfsu, const LFSV& lfsv, const LFSUC& lfsuC,
+    template<typename IG, typename EGC, typename EGP, typename LFSU, typename LFSV, typename LFSUC, typename LFSVC>
+    void assembleCBoundary(const IG& ig, const EGC& egC, const EGP& egP,
+                           const LFSU& lfsu, const LFSV& lfsv, const LFSU& lfsu_pair, const LFSV& lfsv_pair, const LFSUC& lfsuC,
                            const LFSVC& lfsvC) {
         for (int s = 0; s < la.stage; ++s)
         {
@@ -302,28 +302,33 @@ public:
             la.lac0.setTime(la.time + d[s] * la.dt);
             la.lac1.setTime(la.time + d[s] * la.dt);
 
-            laec0->setSolutionSl(*((*solutionsSl)[s]));
-            laec1->setSolutionSl(*((*solutionsSl)[s]));
+            laec0->setSolution(*((*solutions)[s]));
+            laec1->setSolution(*((*solutions)[s]));
 
-            // laec0->setSolution(*((*solutions)[s]));
-            // laec1->setSolution(*((*solutions)[s]));
+            laec0->loadCoefficientsLFSUInside(lfsu);
+            laec1->loadCoefficientsLFSUInside(lfsu);
 
-            // laec0->setSolutionOld(*((*solutionsOld)[s]));
-            // laec1->setSolutionOld(*((*solutionsOld)[s]));
+            laec0->setSolutionOld(*((*solutionsOld)[0]));
+            laec1->setSolutionOld(*((*solutionsOld)[0]));
+
+            laec0->loadCoefficientsLFSUInsideOld(lfsu_pair);
+            laec1->loadCoefficientsLFSUInsideOld(lfsu_pair);
+
+            laec0->setSolutionSl(*((*solutionsSl)[0]));
+            laec1->setSolutionSl(*((*solutionsSl)[0]));
 
             laec0->loadCoefficientsLFSUInsideSl(lfsuC);
             laec1->loadCoefficientsLFSUInsideSl(lfsuC);
             if (do0[s])
             {
                 la.lac0.setWeight(b[s] * la.dt_factor0);
-                laec0->assembleCBoundary(ig, egC, lfsu, lfsv,
+                laec0->assembleCBoundary(ig, egC, egP, lfsu, lfsv, lfsu_pair, lfsv_pair,
                                          lfsuC, lfsvC);
-
             }
             if (do1[s])
             {
                 la.lac1.setWeight(a[s] * la.dt_factor1);
-                laec1->assembleCBoundary(ig, egC, lfsu, lfsv,
+                laec1->assembleCBoundary(ig, egC, egP, lfsu, lfsv, lfsu_pair, lfsv_pair,
                                          lfsuC, lfsvC);
             }
         }

@@ -98,7 +98,7 @@ public:
         solution = &solution_;
     }
 
-        void setSolutionOld(const Solution & solutionOld_)
+    void setSolutionOld(const Solution & solutionOld_)
     {
         solutionOld = &solutionOld_;
     }
@@ -181,11 +181,11 @@ public:
             la.la1.localResidualAssemblerEngine(*residual_1,
                                                 *solution));
         setLocalAssemblerEngineCouplingDT0(
-            la.lac0.localResidualAssemblerEngineCouplingDT0(
-                *residual_0, *solution, *solutionSl));
+            la.lac0.localResidualAssemblerEngineCoupling(
+                *residual_0, *solution, *solutionOld, *solutionSl));
         setLocalAssemblerEngineCouplingDT1(
-            la.lac1.localResidualAssemblerEngineCouplingDT1(
-                *residual_1, *solution, *solutionSl));
+            la.lac1.localResidualAssemblerEngineCoupling(
+                *residual_1, *solution, *solutionOld, *solutionSl));
     }
 
     //! When multiple engines are combined in one assembling

@@ -134,13 +134,13 @@ public:
     }
 
     //! Get the trial grid function space
-    const typename Traits::TrialGridFunctionSpace& trialGridFunctionSpaceSl() const
+    const typename TraitsSl::TrialGridFunctionSpace& trialGridFunctionSpaceSl() const
     {
         return global_assembler.trialGridFunctionSpaceSl();
     }
 
     //! Get the test grid function space
-    const typename Traits::TestGridFunctionSpace& testGridFunctionSpaceSl() const
+    const typename TraitsSl::TestGridFunctionSpace& testGridFunctionSpaceSl() const
     {
         return global_assembler.testGridFunctionSpaceSl();
     }
@@ -206,6 +206,7 @@ public:
 
     void preStageCoupling(unsigned int stage,
                           const std::vector<Domain*> & x,
+                          const std::vector<Domain*> & xOld,
                           const std::vector<DomainSl*> & xSl)
     {
         if (!implicit)
@@ -218,8 +219,7 @@ public:
         local_assembler.setStage(stage);
 
         PreStageEngine & prestage_engine =
-            local_assembler.localPreStageAssemblerEngineCoupling(x,
-                                                                 xSl);
+            local_assembler.localPreStageAssemblerEngineCoupling(x, xOld, xSl);
 
         global_assembler.assemble(prestage_engine);
         //Dune::printvector(std::cout,const_residual.base(),"const residual","row",4,9,1);

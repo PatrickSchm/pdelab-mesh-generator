@@ -20,6 +20,7 @@ namespace PDELab
  *  @{
  */
 
+
 // Status information of Newton's method
 struct OneStepMethodPartialResultCoupling
 {
@@ -307,7 +308,7 @@ public:
 
     std::vector<TrlV*> x(1); // vector of pointers to all steps
     x[0] = &xold;            // initially we have only one
-           if (verbosityLevel >= 1)
+    if (verbosityLevel >= 1)
     {
       std::ios_base::fmtflags oldflags = std::cout.flags();
       std::cout << "TIME STEP [" << method->name() << "] "
@@ -448,15 +449,16 @@ public:
   {
     // do statistics
     OneStepMethodPartialResultCoupling step_result;
-
+    auto XOLD = xnew;
     // save formatting attributes
     ios_base_all_saver format_attribute_saver(std::cout);
 
     std::vector<TrlV*> x(1); // vector of pointers to all steps
-    x[0] = &xold;            // initially we have only one
-    auto xOld = &xold;            // initially we have only one
+    std::vector<TrlV*> xOld(1); // vector of pointers to all steps
     std::vector<TrlVSL*> xSl(1); // vector of pointers to all steps
-    xSl[0] = &xSlold;            // initially we have only one
+    x[0]    = &xold;            // initially we have only one
+    xOld[0] = &XOLD;            // initially we have only one
+    xSl[0]  = &xSlold;            // initially we have only one
 //                Dune::printvector(std::cout, xSl[0] -> base(), "xsl","row");
 
     if (verbosityLevel >= 1)
@@ -490,7 +492,7 @@ public:
       // }
 
       // prepare stage
-      igos.preStageCoupling(r, x, xSl);
+      igos.preStageCoupling(r, x, xOld, xSl);
 
 
       // get vector for current stage
@@ -510,7 +512,163 @@ public:
       // solve stage
       try
       {
-        pdesolver.apply(*x[r], *xOld, *xSl[0]);
+        pdesolver.apply(*x[r],*xOld[0], *xSl[0]);
+
+      } catch (...)
+      {
+        // time step failed -> accumulate to total only
+        PDESolverResult pderes = pdesolver.result();
+        step_result.assembler_time += pderes.assembler_time;
+        step_result.linear_solver_time +=
+          pderes.linear_solver_time;
+        step_result.linear_solver_iterations +=
+          pderes.linear_solver_iterations;
+        step_result.nonlinear_solver_iterations +=
+          pderes.iterations;
+        res.total.assembler_time += step_result.assembler_time;
+        res.total.linear_solver_time +=
+          step_result.linear_solver_time;
+        res.total.linear_solver_iterations +=
+          step_result.linear_solver_iterations;
+        res.total.nonlinear_solver_iterations +=
+          step_result.nonlinear_solver_iterations;
+        res.total.timesteps += 1;
+        throw;
+      }
+      PDESolverResult pderes = pdesolver.result();
+      step_result.assembler_time += pderes.assembler_time;
+      step_result.linear_solver_time += pderes.linear_solver_time;
+      step_result.linear_solver_iterations +=
+        pderes.linear_solver_iterations;
+      step_result.nonlinear_solver_iterations +=
+        pderes.iterations;
+
+      // stage cleanup
+      igos.postStage();
+    }
+
+    // delete intermediate steps
+    for (unsigned i = 1; i < method->s(); ++i)
+      delete x[i];
+
+    // step cleanup
+    igos.postStep();
+
+    // update statistics
+    res.total.assembler_time += step_result.assembler_time;
+    res.total.linear_solver_time += step_result.linear_solver_time;
+    res.total.linear_solver_iterations +=
+      step_result.linear_solver_iterations;
+    res.total.nonlinear_solver_iterations +=
+      step_result.nonlinear_solver_iterations;
+    res.total.timesteps += 1;
+    res.successful.assembler_time += step_result.assembler_time;
+    res.successful.linear_solver_time +=
+      step_result.linear_solver_time;
+    res.successful.linear_solver_iterations +=
+      step_result.linear_solver_iterations;
+    res.successful.nonlinear_solver_iterations +=
+      step_result.nonlinear_solver_iterations;
+    res.successful.timesteps += 1;
+    if (verbosityLevel >= 1)
+    {
+      std::ios_base::fmtflags oldflags = std::cout.flags();
+      std::cout << "::: timesteps      " << std::setw(6)
+                << res.successful.timesteps << " ("
+                << res.total.timesteps << ")" << std::endl;
+      std::cout << "::: nl iterations  " << std::setw(6)
+                << res.successful.nonlinear_solver_iterations
+                << " (" << res.total.nonlinear_solver_iterations
+                << ")" << std::endl;
+      std::cout << "::: lin iterations " << std::setw(6)
+                << res.successful.linear_solver_iterations << " ("
+                << res.total.linear_solver_iterations << ")"
+                << std::endl;
+      std::cout << "::: assemble time  " << std::setw(12)
+                << std::setprecision(4) << std::scientific
+                << res.successful.assembler_time << " ("
+                << res.total.assembler_time << ")" << std::endl;
+      std::cout << "::: lin solve time " << std::setw(12)
+                << std::setprecision(4) << std::scientific
+                << res.successful.linear_solver_time << " ("
+                << res.total.linear_solver_time << ")" << std::endl;
+      std::cout.flags(oldflags);
+    }
+
+    step++;
+    return dt;
+  }
+
+
+  template<typename F, class FP, class IGOFL>
+  T applyCouplingUpdate(T time, T dt, IGOFL& igoSl, FP& fracturePairs, TrlV& xold, F& f, TrlV& xnew, TrlVSL& xSlold)
+  {
+    // do statistics
+    OneStepMethodPartialResultCoupling step_result;
+    auto XOLD = xnew;
+    // save formatting attributes
+    ios_base_all_saver format_attribute_saver(std::cout);
+
+    std::vector<TrlV*> x(1); // vector of pointers to all steps
+    std::vector<TrlV*> xOld(1); // vector of pointers to all steps
+    std::vector<TrlVSL*> xSl(1); // vector of pointers to all steps
+    x[0]    = &xold;            // initially we have only one
+    xOld[0] = &XOLD;            // initially we have only one
+    xSl[0]  = &xSlold;            // initially we have only one
+//                Dune::printvector(std::cout, xSl[0] -> base(), "xsl","row");
+
+    if (verbosityLevel >= 1)
+    {
+      std::ios_base::fmtflags oldflags = std::cout.flags();
+      std::cout << "TIME STEP [" << method->name() << "] "
+                << std::setw(6) << step << " time (from): "
+                << std::setw(12) << std::setprecision(4)
+                << std::scientific << time << " dt: "
+                << std::setw(12) << std::setprecision(4)
+                << std::scientific << dt << " time (to): "
+                << std::setw(12) << std::setprecision(4)
+                << std::scientific << time + dt << std::endl;
+      std::cout.flags(oldflags);
+    }
+
+    // prepare assembler
+    igos.preStep(*method, time, dt);
+
+    // loop over all stages
+    for (unsigned r = 1; r <= method->s(); ++r)
+    {
+      // if (verbosityLevel >= 2)
+      // {
+      std::ios_base::fmtflags oldflags = std::cout.flags();
+      std::cout << "STAGE " << r << " time (to): "
+                << std::setw(12) << std::setprecision(4)
+                << std::scientific << time + method->d(r) * dt
+                << "." << std::endl;
+      std::cout.flags(oldflags);
+      // }
+
+      // prepare stage
+      igos.preStageCoupling(r, x, xOld, xSl);
+
+
+      // get vector for current stage
+      if (r == method->s())
+      {
+        // last stage
+        x.push_back(&xnew);
+      } else
+      {
+        // intermediate step
+        x.push_back(new TrlV(igos.trialGridFunctionSpace()));
+      }
+
+      // set boundary conditions and initial value
+      igos.interpolate(r, *x[r - 1], f, *x[r]);
+
+      // solve stage
+      try
+      {
+        pdesolver.apply(*x[r],igoSl,  fracturePairs, *xOld[0], *xSl[0]);
 
       } catch (...)
       {

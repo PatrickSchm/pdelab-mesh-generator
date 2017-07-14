@@ -122,10 +122,18 @@ public:
     {
     }
 
-        template<typename EG, typename LFSU, typename LFSV>
+    template<typename EG, typename LFSU, typename LFSV>
     void onBindLFSUVOld(const EG& eg, const LFSU& lfsu, const LFSV& lfsv)
     {
     }
+
+    template<typename EG, typename LFSU, typename LFSV>
+    void onBindLFSUVPair(const EG& eg, const LFSU& lfsu, const LFSV& lfsv)
+    {}
+
+        template<typename EG, typename LFSU, typename LFSV>
+    void onBindLFSUVPairOld(const EG& eg, const LFSU& lfsu, const LFSV& lfsv)
+    {}
 
     template<typename EGSL, typename LFSUSL, typename LFSVSL>
     void onBindLFSUVSL(const EGSL& egSl, const LFSUSL& lfsuSl,
@@ -254,10 +262,21 @@ public:
     {
     }
 
-        template<typename LFSU>
+    template<typename LFSU>
     void loadCoefficientsLFSUInsideOld(const LFSU& lfsu_s)
     {
     }
+
+    template<typename LFSU>
+    void loadCoefficientsLFSUInsidePair(const LFSU& lfsu_s)
+    {
+    }
+
+        template<typename LFSU>
+    void loadCoefficientsLFSUInsidePairOld(const LFSU& lfsu_s)
+    {
+    }
+
     template<typename LFSUSL>
     void loadCoefficientsLFSUInsideSl(const LFSUSL& lfsu_sSl)
     {
@@ -292,9 +311,9 @@ public:
     {
     }
 
-    template<typename IG, typename EGC, typename LFSU, typename LFSV, typename LFSUC, typename LFSVC>
-    void assembleCBoundary(const IG& ig, const EGC& egC,
-                           const LFSU& lfsu, const LFSV& lfsv, const LFSUC& lfsuC,
+    template<typename IG, typename EGC, typename EGP, typename LFSU, typename LFSV, typename LFSUC, typename LFSVC>
+    void assembleCBoundary(const IG& ig, const EGC& egC, const EGP& egP,
+                           const LFSU& lfsu, const LFSV& lfsv, const LFSU& lfsu_pair, const LFSV& lfsv_pair, const LFSUC& lfsuC,
                            const LFSVC& lfsvC)
     {
     }

@@ -236,13 +236,13 @@ public:
     }
 
     //! Assemble residual
-    void residual(const Domain & x, const DomainSl & xSl,
+    void residual(const Domain & x, const Domain & xOld, const DomainSl & xSl,
                   Range & r) const
     {
         typedef typename LocalAssembler::LocalResidualAssemblerEngine ResidualEngine;
         ResidualEngine & residual_engine =
             local_assembler.localResidualAssemblerEngineCoupling(r,
-                                                                 x, xSl);
+                                                                 x, xOld, xSl);
         global_assembler.assemble(residual_engine);
     }
 

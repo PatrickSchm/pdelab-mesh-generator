@@ -168,19 +168,20 @@ public:
     {
         global_sl_view.attach(solution_);
         global_sn_view.attach(solution_);
+        global_sl_view_pair.attach(solution_);
     }
 
     void setSolutionOld(const Solution & solutionOld_)
     {
         global_sl_view_old.attach(solutionOld_);
         global_sn_view_old.attach(solutionOld_);
+        global_sl_view_pair_old.attach(solutionOld_);
     }
 
     void setSolutionSl(const SolutionSl & solutionSl_)
     {
         global_sl_viewSl.attach(solutionSl_);
         global_sn_view_sl.attach(solutionSl_);
-
     }
 
     //! Called immediately after binding of local function space in
@@ -192,8 +193,21 @@ public:
     {
         global_sl_view.bind(lfsu_cache);
         xl.resize(lfsu_cache.size());
-        global_sl_view_old.bind(lfsu_cache);
-        xlOld.resize(lfsu_cache.size());
+    }
+
+    template<typename EG, typename LFSUC, typename LFSVC>
+    void onBindLFSUVPair(const EG & eg, const LFSUC & lfsu_cache,
+                         const LFSVC & lfsv_cache)
+    {
+        global_sl_view_pair.bind(lfsu_cache);
+        xlPair.resize(lfsu_cache.size());
+    }
+    template<typename EG, typename LFSUC, typename LFSVC>
+    void onBindLFSUVPairOld(const EG & eg, const LFSUC & lfsu_cache,
+                            const LFSVC & lfsv_cache)
+    {
+        global_sl_view_pair_old.bind(lfsu_cache);
+        xlPairOld.resize(lfsu_cache.size());
     }
     template<typename EG, typename LFSUC, typename LFSVC>
     void onBindLFSUVOld(const EG & eg, const LFSUC & lfsu_cache,
@@ -283,16 +297,25 @@ public:
     template<typename LFSUC>
     void loadCoefficientsLFSUInside(const LFSUC & lfsu_s_cache)
     {
-
         global_sl_view.read(xl);
-        global_sl_view_old.read(xlOld);
-
     }
 
     template<typename LFSUC>
     void loadCoefficientsLFSUInsideOld(const LFSUC & lfsu_s_cache)
     {
-        global_sl_view_old.read(xl);
+        global_sl_view_old.read(xlOld);
+    }
+
+    template<typename LFSUC>
+    void loadCoefficientsLFSUInsidePair(const LFSUC & lfsu_s_cache_pair)
+    {
+        global_sl_view_pair.read(xlPair);
+    }
+
+    template<typename LFSUC>
+    void loadCoefficientsLFSUInsidePairOld(const LFSUC & lfsu_s_cache_pair)
+    {
+        global_sl_view_pair_old.read(xlPairOld);
     }
 
     template<typename LFSUCSL>
@@ -354,18 +377,19 @@ public:
             lfsv_cache.localFunctionSpace(), rl_view, iMat);
     }
 
-    template<typename IG, typename EGC, typename LFSUC, typename LFSVC, typename LFSUCC, typename LFSVCC>
-    void assembleCBoundary(const IG& ig, const EGC& egC,
-                           const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache, const LFSUCC& lfsuC_cache,
+    template<typename IG, typename EGC, typename EGP, typename LFSUC, typename LFSVC, typename LFSUCC, typename LFSVCC>
+    void assembleCBoundary(const IG& ig, const EGC& egC, const EGP& egP,
+                           const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache, const LFSUC& lfsu_pair_cache, const LFSVC& lfsv_pair_cache, const LFSUCC& lfsuC_cache,
                            const LFSVCC& lfsvC_cache)
     {
         rl_view.setWeight(local_assembler.weight);
 
         Dune::PDELab::LocalAssemblerCallSwitchRCoupling<LOP,
-             LOP::doBoundaryCoupling>::boundary_coupling(lop, ig, egC,
-                                                         lfsu_s_cache.localFunctionSpace(), xl, xlOld, lfsv_s_cache.localFunctionSpace(), rl_view,
+             LOP::doBoundaryCoupling>::boundary_coupling(lop, ig, egC, egP,
+                                                         lfsu_s_cache.localFunctionSpace(), lfsu_pair_cache.localFunctionSpace(),
+                                                         xl, xlPair, xlOld, xlPairOld, lfsv_s_cache.localFunctionSpace(), lfsv_pair_cache.localFunctionSpace(),
                                                          lfsuC_cache.localFunctionSpace(), xlSl,
-                                                         lfsvC_cache.localFunctionSpace());
+                                                         lfsvC_cache.localFunctionSpace(), rl_view);
     }
 
     template<typename EG, typename IGC, typename LFSUC, typename LFSVC, typename LFSUCC, typename LFSVCC, typename FH>
@@ -494,6 +518,8 @@ private:
 
     //! Pointer to the current residual vector in which to assemble
     SolutionView global_sl_view;
+    SolutionView global_sl_view_pair;
+    SolutionView global_sl_view_pair_old;
     SolutionView global_sn_view;
     SolutionView global_sl_view_old;
     SolutionView global_sn_view_old;
@@ -514,6 +540,8 @@ private:
 
     //! Inside local coefficients
     SolutionVector xl;
+    SolutionVector xlPair;
+    SolutionVector xlPairOld;
     SolutionVector xlOld;
     SolutionVectorSl xlSl;
     //! Outside local coefficients

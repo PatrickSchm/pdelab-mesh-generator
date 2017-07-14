@@ -75,10 +75,10 @@ struct LocalAssemblerCallSwitchRCoupling
   {
   }
 
-  template<typename IG, typename EGC, typename LFSU, typename LFSV, typename LFSUC, typename XC,
-           typename LFSVC, typename X,  typename R>
+  template<typename IG, typename EGP, typename EGC, typename LFSU, typename LFSV, typename X, typename R, typename LFSUC,
+           typename XC, typename LFSVC>
   static void boundary_coupling(const LA& la, const IG& ig,
-                                const EGC& egC, const LFSU& lfsu, const X& x, const X& xOld, const LFSV& lfsv, const LFSUC& lfsuC,
+                                const EGC& egC, const EGP& egPair, const LFSU& lfsu, const LFSU& lfsu_pair, const X& x, const X& xPair, const X& xOld, const LFSV& lfsv, const LFSV& lfsv_pair, const LFSUC& lfsuC,
                                 const XC& xC, const LFSVC& lfsvC,
                                 R& r)
   {
@@ -307,13 +307,15 @@ struct LocalAssemblerCallSwitchRCoupling<LA, true>
     la.alpha_volume(eg, lfsu, x, lfsv, r, iMat);
   }
 
-  template<typename IG, typename EGC, typename LFSU, typename LFSV, typename X, typename R, typename LFSUC,
+  template<typename IG, typename EGP, typename EGC, typename LFSU, typename LFSV, typename X, typename R, typename LFSUC,
            typename XC, typename LFSVC>
   static void boundary_coupling(const LA& la, const IG& ig,
-                                const EGC& egC, const LFSU& lfsu,  X& x, X& xOld, const LFSV& lfsv, R& r, const LFSUC& lfsuC,
-                                const XC& xC, const LFSVC& lfsvC)
+                                const EGC& egC, const EGP& egPair, const LFSU& lfsu, const LFSU& lfsu_pair,
+                                const X& x, const X& xPair, const X& xOld,const X& xPairOld, const LFSV& lfsv,
+                                const LFSV& lfsv_pair, const LFSUC& lfsuC,
+                                const XC& xC, const LFSVC& lfsvC, R& r)
   {
-    la.boundary_coupling(ig, egC, lfsu, x, xOld, lfsv, r, lfsuC,
+    la.boundary_coupling(ig, egC, egPair, lfsu, lfsu_pair, x, xPair, xPairOld, xOld, lfsv, lfsv_pair, r, lfsuC,
                          xC, lfsvC);
   }
 

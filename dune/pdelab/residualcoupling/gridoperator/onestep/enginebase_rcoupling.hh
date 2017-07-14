@@ -240,8 +240,28 @@ public:
         lae1->onBindLFSUVOld(eg, lfsu, lfsv);
         laec0->onBindLFSUVOld(eg, lfsu, lfsv);
         laec1->onBindLFSUVOld(eg, lfsu, lfsv);
-
     }
+
+    template<typename EG, typename LFSU, typename LFSV>
+    void onBindLFSUVPair(const EG & eg, const LFSU & lfsu,
+                        const LFSV & lfsv)
+    {
+        lae0->onBindLFSUVPair(eg, lfsu, lfsv);
+        lae1->onBindLFSUVPair(eg, lfsu, lfsv);
+        laec0->onBindLFSUVPair(eg, lfsu, lfsv);
+        laec1->onBindLFSUVPair(eg, lfsu, lfsv);
+    }
+
+        template<typename EG, typename LFSU, typename LFSV>
+    void onBindLFSUVPairOld(const EG & eg, const LFSU & lfsu,
+                        const LFSV & lfsv)
+    {
+        lae0->onBindLFSUVPairOld(eg, lfsu, lfsv);
+        lae1->onBindLFSUVPairOld(eg, lfsu, lfsv);
+        laec0->onBindLFSUVPairOld(eg, lfsu, lfsv);
+        laec1->onBindLFSUVPairOld(eg, lfsu, lfsv);
+    }
+
     template<typename EGSL, typename LFSUSL, typename LFSVSL>
     void onBindLFSUVSL(const EGSL & egSl, const LFSUSL & lfsuSl,
                        const LFSVSL & lfsvSl)
@@ -468,6 +488,23 @@ public:
         laec0->loadCoefficientsLFSUInsideOld(lfsu_s);
         laec1->loadCoefficientsLFSUInsideOld(lfsu_s);
     }
+    template<typename LFSU>
+    void loadCoefficientsLFSUInsidePair(const LFSU & lfsu_s)
+    {
+        lae0->loadCoefficientsLFSUInsidePair(lfsu_s);
+        lae1->loadCoefficientsLFSUInsidePair(lfsu_s);
+        laec0->loadCoefficientsLFSUInsidePair(lfsu_s);
+        laec1->loadCoefficientsLFSUInsidePair(lfsu_s);
+    }
+
+        template<typename LFSU>
+    void loadCoefficientsLFSUInsidePairOld(const LFSU & lfsu_s)
+    {
+        lae0->loadCoefficientsLFSUInsidePairOld(lfsu_s);
+        lae1->loadCoefficientsLFSUInsidePairOld(lfsu_s);
+        laec0->loadCoefficientsLFSUInsidePairOld(lfsu_s);
+        laec1->loadCoefficientsLFSUInsidePairOld(lfsu_s);
+    }
 
     template<typename LFSUSL>
     void loadCoefficientsLFSUInsideSl(const LFSUSL & lfsu_sSl)
@@ -513,14 +550,14 @@ public:
         lae1->assembleUVVolume(eg, lfsu, lfsv, iMat);
     }
 
-    template<typename IG, typename EGC, typename LFSU, typename LFSV, typename LFSUC, typename LFSVC>
-    void assembleCBoundary(const IG& ig, const EGC& egC,
-                           const LFSU& lfsu, const LFSV& lfsv, const LFSUC& lfsuC,
+    template<typename IG, typename EGC, typename EGP, typename LFSU, typename LFSV, typename LFSUC, typename LFSVC>
+    void assembleCBoundary(const IG& ig, const EGC& egC, const EGP& egP,
+                           const LFSU& lfsu, const LFSV& lfsv, const LFSU& lfsu_pair, const LFSV& lfsv_pair, const LFSUC& lfsuC,
                            const LFSVC& lfsvC) {
         if (implicit)
-            laec0->assembleCBoundary(ig, egC, lfsu, lfsv,
+            laec0->assembleCBoundary(ig, egC, egP, lfsu, lfsv, lfsu_pair, lfsv_pair,
                                      lfsuC, lfsvC);
-        laec1->assembleCBoundary(ig, egC, lfsu, lfsv, lfsuC,
+        laec1->assembleCBoundary(ig, egC, egP, lfsu, lfsv, lfsu_pair, lfsv_pair, lfsuC,
                                  lfsvC);
     }
 

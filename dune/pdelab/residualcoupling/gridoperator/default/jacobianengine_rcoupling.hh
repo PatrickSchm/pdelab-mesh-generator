@@ -157,6 +157,8 @@ public:
     void setSolution(const Solution & solution_)
     {
         global_s_s_view.attach(solution_);
+        global_s_s_view_pair.attach(solution_);
+
         global_s_n_view.attach(solution_);
     }
 
@@ -164,6 +166,7 @@ public:
     {
         global_s_s_view_old.attach(solutionOld_);
         global_s_n_view_old.attach(solutionOld_);
+        global_s_s_view_pair_old.attach(solutionOld_);
     }
 
     void setSolutionSl(const SolutionSl & solutionSl_)
@@ -181,8 +184,7 @@ public:
     {
         global_s_s_view.bind(lfsu_cache);
         xl.resize(lfsu_cache.size());
-        global_s_s_view_old.bind(lfsu_cache);
-        xlOld.resize(lfsu_cache.size());
+
         global_a_ss_view.bind(lfsv_cache, lfsu_cache);
         al.assign(lfsv_cache.size(), lfsu_cache.size(), 0.0);
     }
@@ -193,6 +195,22 @@ public:
     {
         global_s_s_view_old.bind(lfsu_cache);
         xlOld.resize(lfsu_cache.size());
+    }
+
+    template<typename EG, typename LFSUC, typename LFSVC>
+    void onBindLFSUVPair(const EG & eg, const LFSUC & lfsu_cache,
+                         const LFSVC & lfsv_cache)
+    {
+        global_s_s_view_pair.bind(lfsu_cache);
+        xlPair.resize(lfsu_cache.size());
+    }
+
+        template<typename EG, typename LFSUC, typename LFSVC>
+    void onBindLFSUVPairOld(const EG & eg, const LFSUC & lfsu_cache,
+                         const LFSVC & lfsv_cache)
+    {
+        global_s_s_view_pair_old.bind(lfsu_cache);
+        xlPairOld.resize(lfsu_cache.size());
     }
 
     template<typename EGSL, typename LFSUCSL, typename LFSVCSL>
@@ -258,6 +276,16 @@ public:
     void loadCoefficientsLFSUInsideOld(const LFSUC & lfsu_cacheOld)
     {
         global_s_s_view_old.read(xlOld);
+    }
+    template<typename LFSUC>
+    void loadCoefficientsLFSUInsidePair(const LFSUC & lfsu_cachePair)
+    {
+        global_s_s_view_pair.read(xlPair);
+    }
+    template<typename LFSUC>
+    void loadCoefficientsLFSUInsidePairOld(const LFSUC & lfsu_cachePair)
+    {
+        global_s_s_view_pair_old.read(xlPairOld);
     }
     template<typename LFSUCSL>
     void loadCoefficientsLFSUInsideSl(const LFSUCSL & lfsu_cacheSl)
@@ -325,9 +353,9 @@ public:
             lfsv_cache.localFunctionSpace(), iMat, al_view);
     }
 
-    template<typename IG, typename EGC, typename LFSU, typename LFSV, typename LFSUC, typename LFSVC>
-    void assembleCBoundary(const IG& ig, const EGC& egC,
-                           const LFSU& lfsu_cache, const LFSV& lfsv_cache, const LFSUC& lfsuC_cache,
+    template<typename IG, typename EGC, typename EGP, typename LFSU, typename LFSV, typename LFSUC, typename LFSVC>
+    void assembleCBoundary(const IG& ig, const EGC& egC, const EGP& egP,
+                           const LFSU& lfsu_cache, const LFSV& lfsv_cache, const LFSU& lfsu_cache_pair, const LFSV& lfsv_cache_pair, const LFSUC& lfsuC_cache,
                            const LFSVC& lfsvC_cache)
     {
         al_view.setWeight(local_assembler.weight);
@@ -427,6 +455,10 @@ private:
     SolutionView global_s_s_view;
     SolutionView global_s_n_view;
 
+    SolutionView global_s_s_view_pair;
+    SolutionView global_s_s_view_pair_old;
+
+
     SolutionView global_s_s_view_old;
     SolutionView global_s_n_view_old;
 
@@ -460,6 +492,8 @@ private:
             LocalTrialSpaceTag> SolutionVectorSl;
 
     SolutionVector xl;
+    SolutionVector xlPair;
+    SolutionVector xlPairOld;
     SolutionVector xn;
 
     SolutionVector xlOld;

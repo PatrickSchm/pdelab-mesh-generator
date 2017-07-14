@@ -217,9 +217,11 @@ public:
     }
     LocalPreStageAssemblerEngine & localPreStageAssemblerEngineCoupling(
         const std::vector<typename Traits::Solution*> & x,
+        const std::vector<typename Traits::Solution*> & xOld,
         const std::vector<typename TraitsSl::Solution*> & xSl)
     {
         prestage_engine.setSolutions(x);
+        prestage_engine.setSolutionsOld(xOld);
         prestage_engine.setSolutionsSl(xSl);
 
         prestage_engine.setConstResidual(const_residual);
@@ -235,7 +237,6 @@ public:
         const typename Traits::Solution & xOld,
         const typename TraitsSl::Solution & xSl)
     {
-
         residual_engine.setSolution(x);
         residual_engine.setSolutionOld(xOld);
         residual_engine.setSolutionSl(xSl);
