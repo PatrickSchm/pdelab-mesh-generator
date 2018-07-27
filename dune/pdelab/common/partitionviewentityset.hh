@@ -258,8 +258,8 @@ namespace Dune {
         : _index_set(std::make_shared<IndexSet>(gv,supported_codims,true))
       {}
 
-      explicit PartitionViewEntitySet(const GridView& gv)
-        : _index_set(std::make_shared<IndexSet>(gv,CodimMask(),false))
+      explicit PartitionViewEntitySet(const GridView& gv, bool initialize = true)
+        : _index_set(std::make_shared<IndexSet>(gv,CodimMask(initialize ? ~0ull : 0ull),initialize))
       {}
 
       //! Reset this EntitySet, which removes all entities from it.
@@ -573,7 +573,7 @@ namespace Dune {
             if (!Partitions::contains(e.partitionType()))
               continue;
 
-            auto& ref_el = ReferenceElements<typename Base::Traits::CoordinateField,GV::dimension>::general(e.type());
+            auto ref_el = ReferenceElements<typename Base::Traits::CoordinateField,GV::dimension>::general(e.type());
             for (dim_type codim = 0; codim <= Grid::dimension; ++codim)
               {
                 if (!_active_codims.test(codim))

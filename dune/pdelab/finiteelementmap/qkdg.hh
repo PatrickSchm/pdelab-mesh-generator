@@ -35,28 +35,29 @@ namespace Dune {
      */
     template<class D, class R, int k, int d>
     class QkDGLocalFiniteElementMap<D,R,k,d,QkDGBasisPolynomial::lagrange>
-      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkDGLagrangeLocalFiniteElement<D,R,k,d> >
+      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkDGLagrangeLocalFiniteElement<D,R,k,d>,d>
     {
     public:
-      bool fixedSize() const
+
+      static constexpr bool fixedSize()
       {
         return true;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr bool hasDOFs(int codim)
       {
         return codim == 0;
       }
 
-      std::size_t size(GeometryType gt) const
+      static constexpr std::size_t size(GeometryType gt)
       {
-        if (gt == GeometryType(GeometryType::cube,d))
+        if (gt == GeometryTypes::cube(d))
           return Dune::QkStuff::QkSize<k,d>::value;
         else
           return 0;
       }
 
-      std::size_t maxLocalSize() const
+      static constexpr std::size_t maxLocalSize()
       {
         return Dune::QkStuff::QkSize<k,d>::value;
       }
@@ -86,28 +87,29 @@ namespace Dune {
      */
     template<class D, class R, int k, int d>
     class QkDGLocalFiniteElementMap<D,R,k,d,QkDGBasisPolynomial::legendre>
-      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkDGLegendreLocalFiniteElement<D,R,k,d> >
+      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkDGLegendreLocalFiniteElement<D,R,k,d>,d>
     {
     public:
-      bool fixedSize() const
+
+      static constexpr bool fixedSize()
       {
         return true;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr bool hasDOFs(int codim)
       {
         return codim == 0;
       }
 
-      std::size_t size(GeometryType gt) const
+      static constexpr std::size_t size(GeometryType gt)
       {
-        if (gt == GeometryType(GeometryType::cube,d))
+        if (gt == GeometryTypes::cube(d))
           return Dune::QkStuff::QkSize<k,d>::value;
         else
           return 0;
       }
 
-      std::size_t maxLocalSize() const
+      static constexpr std::size_t maxLocalSize()
       {
         return Dune::LegendreStuff::LegendreSize<k,d>::value;
       }
@@ -137,28 +139,29 @@ namespace Dune {
      */
     template<class D, class R, int k, int d>
     class QkDGLocalFiniteElementMap<D,R,k,d,QkDGBasisPolynomial::lobatto>
-      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkDGGLLocalFiniteElement<D,R,k,d> >
+      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkDGGLLocalFiniteElement<D,R,k,d>,d>
     {
     public:
-      bool fixedSize() const
+
+      static constexpr bool fixedSize()
       {
         return true;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr bool hasDOFs(int codim)
       {
         return codim == 0;
       }
 
-      std::size_t size(GeometryType gt) const
+      static constexpr std::size_t size(GeometryType gt)
       {
-        if (gt == GeometryType(GeometryType::cube,d))
+        if (gt == GeometryTypes::cube(d))
           return Dune::QkStuff::QkSize<k,d>::value;
         else
           return 0;
       }
 
-      std::size_t maxLocalSize() const
+      static constexpr std::size_t maxLocalSize()
       {
         return Dune::QkStuff::QkSize<k,d>::value;
       }
@@ -204,6 +207,7 @@ namespace Dune {
                                         Dune::PB::BasisType::Qk>
     {
     public:
+
       //! return type of polynomial basis
       static constexpr QkDGBasisPolynomial polynomial()
       {

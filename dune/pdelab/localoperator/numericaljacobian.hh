@@ -44,8 +44,8 @@ public:
            typename Jacobian>
   void jacobian_volume
   ( const EG& eg,
-    const LFSU& lfsu, const X& x, const LFSV& lfsv, int iMat,
-    Jacobian& mat) const
+    const LFSU& lfsu, const X& x, const LFSV& lfsv,
+    Jacobian& mat, int iMat) const
   {
     typedef typename X::value_type D;
     typedef typename Jacobian::value_type R;
@@ -55,13 +55,13 @@ public:
     const int m = lfsv.size();
     const int n = lfsu.size();
 
-
     X u(x);
 
     // Notice that in general lfsv.size() != mat.nrows()
     ResidualVector down(mat.nrows(), 0.), up(mat.nrows());
     ResidualView downview = down.weightedAccumulationView(mat.weight());
     ResidualView upview = up.weightedAccumulationView(mat.weight());
+
 
     asImp().alpha_volume(eg, lfsu, u, lfsv, downview, iMat);
     for (int j = 0; j < n; j++) // loop over columns
@@ -70,10 +70,8 @@ public:
       D delta = epsilon * (1.0 + std::abs(u(lfsu, j)));
       u(lfsu, j) += delta;
       asImp().alpha_volume(eg, lfsu, u, lfsv, upview, iMat);
-      for (int i = 0; i < m; i++) {
+      for (int i = 0; i < m; i++)
         mat.rawAccumulate(lfsv, i, lfsu, j, (up(lfsv, i) - down(lfsv, i)) / delta);
-      }
-
       u(lfsu, j) = x(lfsu, j);
     }
   }
@@ -84,25 +82,26 @@ private:
   const Imp& asImp () const { return static_cast<const Imp &>(*this); }
 };
 
+
 template<typename Imp>
-class NumericalJacobianCouplingVolumeReversed
+class NumericalJacobianZeroThickness
 {
 public:
-  NumericalJacobianCouplingVolumeReversed ()
+  NumericalJacobianZeroThickness ()
     : epsilon(1e-7)
   {}
 
-  NumericalJacobianCouplingVolumeReversed (double epsilon_)
+  NumericalJacobianZeroThickness (double epsilon_)
     : epsilon(epsilon_)
   {}
 
-  //! compute local jacobian of the coupling reverse term
-  template< typename EG, typename IGC, typename LFSU,
-            typename X, typename LFSV, typename LFSUC,
-            typename XC, typename LFSVC, typename FH, typename Jacobian>
-  void jacobian_boundary_coupling_reversed(const EG& eg, const IGC& igC, const LFSU& lfsu,
-                                           const X& x, LFSV& lfsv, LFSUC& lfsuC,
-                                           const XC& xC, LFSVC& lfsvC, std::vector<FH> fractureHeight, Jacobian& mat) const
+  //! compute local jacobian of the volume term
+  template<typename EG, typename IGS, typename LFSU, typename X, typename LFSV,
+           typename Jacobian>
+  void jacobian_zero_thickness
+  ( const EG& eg, const IGS& igs,
+    const LFSU& lfsu, const X& x, const LFSV& lfsv,
+    Jacobian& mat, std::vector<int> indices) const
   {
     typedef typename X::value_type D;
     typedef typename Jacobian::value_type R;
@@ -111,26 +110,22 @@ public:
 
     const int m = lfsv.size();
     const int n = lfsu.size();
-
     X u(x);
-
     // Notice that in general lfsv.size() != mat.nrows()
     ResidualVector down(mat.nrows(), 0.), up(mat.nrows());
     ResidualView downview = down.weightedAccumulationView(mat.weight());
     ResidualView upview = up.weightedAccumulationView(mat.weight());
 
-    asImp().boundary_coupling_reversed(eg, igC, lfsu, u, lfsv, downview, lfsuC,
-                                       xC, lfsvC, fractureHeight);
+
+    asImp().alpha_zero_thickness(eg, igs, lfsu, u, lfsv, downview, indices);
     for (int j = 0; j < n; j++) // loop over columns
     {
       up = 0.0;
       D delta = epsilon * (1.0 + std::abs(u(lfsu, j)));
       u(lfsu, j) += delta;
-      asImp().boundary_coupling_reversed(eg, igC, lfsu, u, lfsv, upview, lfsuC,
-                                         xC, lfsvC, fractureHeight);
-      for (int i = 0; i < m; i++) {
+      asImp().alpha_zero_thickness(eg, igs, lfsu, u, lfsv, upview, indices);
+      for (int i = 0; i < m; i++)
         mat.rawAccumulate(lfsv, i, lfsu, j, (up(lfsv, i) - down(lfsv, i)) / delta);
-      }
       u(lfsu, j) = x(lfsu, j);
     }
   }
@@ -255,7 +250,6 @@ public:
     ResidualView downview_n = down_n.weightedAccumulationView(1.0);
     ResidualView upview_n = up_n.weightedAccumulationView(1.0);
 
-
     // base line
     asImp().alpha_skeleton(ig, lfsu_s, u_s, lfsv_s, lfsu_n, u_n, lfsv_n, downview_s,
                            downview_n);
@@ -306,66 +300,6 @@ private:
  *
  * \tparam Imp Type of the derived class (CRTP-trick).
  */
-
-template<typename Imp>
-class NumericalJacobianCouplingBoundary
-{
-public:
-  NumericalJacobianCouplingBoundary ()
-    : epsilon(1e-7)
-  {}
-
-  NumericalJacobianCouplingBoundary (double epsilon_)
-    : epsilon(epsilon_)
-  {}
-
-
-  //! compute local jacobian of the coupling reverse term
-  template< typename IG, typename EGC, typename LFSU,
-            typename X, typename LFSV, typename LFSUC,
-            typename XC, typename LFSVC, typename Jacobian>
-  void jacobian_boundary_coupling(const IG& ig, const EGC& egC, const LFSU& lfsu_s,
-                                  const X& x_s, LFSV& lfsv_s, LFSUC& lfsuC_s,
-                                  const XC& xC_s, LFSVC& lfsvC_s, Jacobian& mat_ss) const
-  {
-    typedef typename X::value_type D;
-    typedef typename Jacobian::value_type R;
-    typedef LocalVector<R, TestSpaceTag, typename Jacobian::weight_type> ResidualVector;
-    typedef typename ResidualVector::WeightedAccumulationView ResidualView;
-
-    const int m_s = lfsv_s.size();
-    const int n_s = lfsu_s.size();
-
-    X u_s(x_s);
-
-    // Notice that in general lfsv.size() != mat.nrows()
-    ResidualVector down_s(mat_ss.nrows()), up_s(mat_ss.nrows());
-    ResidualView downview_s = down_s.weightedAccumulationView(mat_ss.weight());
-    ResidualView upview_s = up_s.weightedAccumulationView(mat_ss.weight());;
-
-
-    // base line
-    asImp().boundary_coupling(ig,egC, lfsu_s, u_s, lfsv_s, downview_s, lfsuC_s, xC_s, lfsvC_s);
-
-    // jiggle in self
-    for (int j = 0; j < n_s; j++)
-    {
-      up_s = 0.0;
-      D delta = epsilon * (1.0 + std::abs(u_s(lfsu_s, j)));
-      u_s(lfsu_s, j) += delta;
-      asImp().boundary_coupling(ig,egC, lfsu_s, u_s, lfsv_s, downview_s, lfsuC_s, xC_s, lfsvC_s);
-      for (int i = 0; i < m_s; i++)
-        mat_ss.rawAccumulate(lfsv_s, i, lfsu_s, j, (up_s(lfsv_s, i) - down_s(lfsv_s, i)) / delta);
-      u_s(lfsu_s, j) = x_s(lfsu_s, j);
-    }
-  }
-
-private:
-  const double epsilon; // problem: this depends on data type R!
-  Imp& asImp () { return static_cast<Imp &> (*this); }
-  const Imp& asImp () const { return static_cast<const Imp &>(*this); }
-};
-
 template<typename Imp>
 class NumericalJacobianBoundary
 {

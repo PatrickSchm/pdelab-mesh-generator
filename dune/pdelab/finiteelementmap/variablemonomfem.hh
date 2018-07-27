@@ -48,6 +48,9 @@ namespace Dune {
     public:
       typedef FiniteElementMapTraits<FiniteElementType> Traits;
 
+      //! The dimension of the finite elements returned by this map.
+      static constexpr int dimension = d;
+
       /** Construct a VariableMonomLocalFiniteElementMap for GeometryType Dune::cube */
       VariableMonomLocalFiniteElementMap (const M & m, unsigned int defaultP) :
         gt_(Dune::GeometryType::cube,d), mapper_(m), polOrder_(mapper_.size(), defaultP), defaultP_(defaultP)
@@ -100,12 +103,12 @@ namespace Dune {
         return p;
       }
 
-      bool fixedSize() const
+      static constexpr bool fixedSize()
       {
         return false;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr bool hasDOFs(int codim)
       {
         return codim == 0;
       }

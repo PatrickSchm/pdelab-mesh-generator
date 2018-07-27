@@ -4,417 +4,422 @@
 #include <assemblerutilties.hh>
 
 namespace Dune {
-  namespace PDELab {
+namespace PDELab {
 
-    //! \defgroup GridOperator Grid Operator
-    //! \ingroup PDELab
-    //! \{
+//! \defgroup GridOperator Grid Operator
+//! \ingroup PDELab
+//! \{
 
-    /** \brief The global assembler which performs the traversing of
-        the integration parts.
+/** \brief The global assembler which performs the traversing of
+    the integration parts.
 
-        The global assembler does only provide the local function
-        spaces and the integration parts. It does not perform the
-        actual integration or modify any of the assembling objects
-        like the pattern, residual, and jacobian matrix.
+    The global assembler does only provide the local function
+    spaces and the integration parts. It does not perform the
+    actual integration or modify any of the assembling objects
+    like the pattern, residual, and jacobian matrix.
 
-     */
-    class AssemblerInterface{
-    public:
-      template<class LocalAssemblerEngine>
-      void assemble(LocalAssemblerEngine & local_assembler_engine);
-    };
+ */
+class AssemblerInterface {
+public:
+  template<class LocalAssemblerEngine>
+  void assemble(LocalAssemblerEngine & local_assembler_engine);
+};
 
 
-    /** \brief The local assembler engine which handles the
-        integration parts as provided by the global assemblers.
+/** \brief The local assembler engine which handles the
+    integration parts as provided by the global assemblers.
 
-     */
-    class LocalAssemblerEngine{
-    public:
-      //! The type of the local assembler
-      typedef LocalAssemblerInterface LocalAssembler;
+ */
+class LocalAssemblerEngine {
+public:
+  //! The type of the local assembler
+  typedef LocalAssemblerInterface LocalAssembler;
 
-      //! Access to the superior local assembler object
-      const LocalAssembler & localAssembler();
+  //! Access to the superior local assembler object
+  const LocalAssembler & localAssembler();
 
-      /** @name Query methods
+  /** @name Query methods
 
-          Query methods indicating which assembling methods need to be
-          called by the global assembler.
+      Query methods indicating which assembling methods need to be
+      called by the global assembler.
 
-      @{
-      */
-      bool requireSkeleton() const;
-      bool requireSkeletonTwoSided() const;
-      bool requireUVVolume() const;
-      bool requireVVolume() const;
-      bool requireUVSkeleton() const;
-      bool requireVSkeleton() const;
-      bool requireUVBoundary() const;
-      bool requireVBoundary() const;
-      bool requireUVProcessor() const;
-      bool requireVProcessor() const;
-      bool requireUVEnrichedCoupling() const;
-      bool requireVEnrichedCoupling() const;
-      bool requireUVVolumePostSkeleton() const;
-      bool requireVVolumePostSkeleton() const;
-      //! @}
+  @{
+  */
+  bool requireSkeleton() const;
+  bool requireSkeletonTwoSided() const;
+  bool requireUVVolume() const;
+  bool requireZeroThickness() const;
+  bool requireVVolume() const;
+  bool requireUVSkeleton() const;
+  bool requireVSkeleton() const;
+  bool requireUVBoundary() const;
+  bool requireVBoundary() const;
+  bool requireUVProcessor() const;
+  bool requireVProcessor() const;
+  bool requireUVEnrichedCoupling() const;
+  bool requireVEnrichedCoupling() const;
+  bool requireUVVolumePostSkeleton() const;
+  bool requireVVolumePostSkeleton() const;
+  //! @}
 
-      /**
-         @name Assembling methods
+  /**
+     @name Assembling methods
 
-         All local function spaces as provided in these methods are
-         already bound to the grid cell corresponding to the entity
-         part \a eg or intersection part \a ig .
+     All local function spaces as provided in these methods are
+     already bound to the grid cell corresponding to the entity
+     part \a eg or intersection part \a ig .
 
-         @{
-       */
+     @{
+   */
 
-      /** Assembling method which is called for a given grid cell. It
-      is called before the local function spaces are bound to the cell
-      and the coefficients for the local trial function space are
-      extracted.
+  /** Assembling method which is called for a given grid cell. It
+  is called before the local function spaces are bound to the cell
+  and the coefficients for the local trial function space are
+  extracted.
 
-      \return Indicate whether assembling of this cell may be aborted
-      after the call of this method. This may avoid unneccessary costs
-      due to binding of the local function spaces etc.
-      */
-      template<typename EG>
-      bool assembleCell(const EG & eg);
+  \return Indicate whether assembling of this cell may be aborted
+  after the call of this method. This may avoid unneccessary costs
+  due to binding of the local function spaces etc.
+  */
+  template<typename EG>
+  bool assembleCell(const EG & eg);
 
-      /** Assembling for a codim 0 entity part for trial and test
-      local function spaces.
-      */
-      template<typename EG, typename LFSU, typename LFSV>
-      void assembleUVVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv, int iMat);
+  /** Assembling for a codim 0 entity part for trial and test
+  local function spaces.
+  */
+  template<typename EG, typename LFSU, typename LFSV>
+  void assembleUVVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv);
 
-      /** Assembling for a codim 0 entity part for test local function
-      spaces.
-      */
-      template<typename EG, typename LFSV>
-      void assembleVVolume(const EG & eg, const LFSV & lfsv);
+  template<typename EG, typename ITS, typename LFSU, typename LFSV>
+  void assembleZeroThickness(const EG & eg, const ITS & igs, const LFSU & lfsu, const LFSV & lfsv, int iMat);
 
-      /** Assembling for an interior codim 1 entity part for trial and
-      test local function spaces.
-      */
-      template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N>
-      void assembleUVSkeleton(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
-                              const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
 
-      /** Assembling for an interior codim 1 entity part for test
-      local function spaces.
-      */
-      template<typename IG, typename LFSV_S, typename LFSV_N>
-      void assembleVSkeleton(const IG & ig, const LFSV_S & lfsv_s, const LFSV_N & lfsv_n);
+  /** Assembling for a codim 0 entity part for test local function
+  spaces.
+  */
+  template<typename EG, typename LFSV>
+  void assembleVVolume(const EG & eg, const LFSV & lfsv);
 
-      /** Assembling for a boundary codim 1 entity part for trial and
-      test local function spaces.
-      */
-      template<typename IG, typename LFSU_S, typename LFSV_S>
-      void assembleUVBoundary(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
+  /** Assembling for an interior codim 1 entity part for trial and
+  test local function spaces.
+  */
+  template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N>
+  void assembleUVSkeleton(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                          const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
 
-      /** Assembling for a boundary codim 1 entity part for test local
-      function spaces.
-      */
-      template<typename IG, typename LFSV_S>
-      void assembleVBoundary(const IG & ig, const LFSV_S & lfsv_s);
+  /** Assembling for an interior codim 1 entity part for test
+  local function spaces.
+  */
+  template<typename IG, typename LFSV_S, typename LFSV_N>
+  void assembleVSkeleton(const IG & ig, const LFSV_S & lfsv_s, const LFSV_N & lfsv_n);
 
-      /** Assembling for a processor boundary codim 1 entity part for trial and
-      test local function spaces. Specifically, this method will be called for intersections
-      for which it holds that both ig.boundary() and ig.neighbor() return false, i.e. intersections
-      for which it is not possible to obtain the outside entity.
-      */
-      template<typename IG, typename LFSU_S, typename LFSV_S>
-      void assembleUVProcessor(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
+  /** Assembling for a boundary codim 1 entity part for trial and
+  test local function spaces.
+  */
+  template<typename IG, typename LFSU_S, typename LFSV_S>
+  void assembleUVBoundary(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
 
-      /** Assembling for a processor boundary codim 1 entity part for test local
-      function spaces. Specifically, this method will be called for intersections
-      for which it holds that both ig.boundary() and ig.neighbor() return false, i.e. intersections
-      for which it is not possible to obtain the outside entity.
-      */
-      template<typename IG, typename LFSV_S>
-      void assembleVProcessor(const IG & ig, const LFSV_S & lfsv_s);
+  /** Assembling for a boundary codim 1 entity part for test local
+  function spaces.
+  */
+  template<typename IG, typename LFSV_S>
+  void assembleVBoundary(const IG & ig, const LFSV_S & lfsv_s);
 
-      template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N,
-               typename LFSU_C, typename LFSV_C>
-      void assembleUVEnrichedCoupling(const IG & ig,
-                                      const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
-                                      const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
-                                      const LFSU_C & lfsu_c, const LFSV_C & lfsv_c);
+  /** Assembling for a processor boundary codim 1 entity part for trial and
+  test local function spaces. Specifically, this method will be called for intersections
+  for which it holds that both ig.boundary() and ig.neighbor() return false, i.e. intersections
+  for which it is not possible to obtain the outside entity.
+  */
+  template<typename IG, typename LFSU_S, typename LFSV_S>
+  void assembleUVProcessor(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
 
-      template<typename IG, typename LFSV_S, typename LFSV_N, typename LFSV_C>
-      void assembleVEnrichedCoupling(const IG & ig,
-                                     const LFSV_S & lfsv_s,
-                                     const LFSV_N & lfsv_n,
-                                     const LFSV_C & lfsv_c);
+  /** Assembling for a processor boundary codim 1 entity part for test local
+  function spaces. Specifically, this method will be called for intersections
+  for which it holds that both ig.boundary() and ig.neighbor() return false, i.e. intersections
+  for which it is not possible to obtain the outside entity.
+  */
+  template<typename IG, typename LFSV_S>
+  void assembleVProcessor(const IG & ig, const LFSV_S & lfsv_s);
 
-      /** Assembling for a codim 0 entity part for trial and test
-      local function spaces which is called after the intersection
-      parts of the current cell have been handled.
-      */
-      template<typename EG, typename LFSU, typename LFSV>
-      void assembleUVVolumePostSkeleton(const EG & eg, const LFSU & lfsu, const LFSV & lfsv);
+  template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N,
+           typename LFSU_C, typename LFSV_C>
+  void assembleUVEnrichedCoupling(const IG & ig,
+                                  const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                                  const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
+                                  const LFSU_C & lfsu_c, const LFSV_C & lfsv_c);
 
-      /** Assembling for a codim 0 entity part for test local function
-      spaces which is called after the intersection parts of the
-      current cell have been handled.
-      */
-      template<typename EG, typename LFSV>
-      void assembleVVolumePostSkeleton(const EG & eg, const LFSV & lfsv);
+  template<typename IG, typename LFSV_S, typename LFSV_N, typename LFSV_C>
+  void assembleVEnrichedCoupling(const IG & ig,
+                                 const LFSV_S & lfsv_s,
+                                 const LFSV_N & lfsv_n,
+                                 const LFSV_C & lfsv_c);
 
-      //! Called directly before assembling
-      void preAssembly();
+  /** Assembling for a codim 0 entity part for trial and test
+  local function spaces which is called after the intersection
+  parts of the current cell have been handled.
+  */
+  template<typename EG, typename LFSU, typename LFSV>
+  void assembleUVVolumePostSkeleton(const EG & eg, const LFSU & lfsu, const LFSV & lfsv);
 
-      //! Called last thing after assembling
-      void postAssembly();
+  /** Assembling for a codim 0 entity part for test local function
+  spaces which is called after the intersection parts of the
+  current cell have been handled.
+  */
+  template<typename EG, typename LFSV>
+  void assembleVVolumePostSkeleton(const EG & eg, const LFSV & lfsv);
 
-      /**
-         @}
-       */
+  //! Called directly before assembling
+  void preAssembly();
 
-      /**
-         @name Notifications
+  //! Called last thing after assembling
+  void postAssembly();
 
-         Notification methods called by the global assembler when
-         binding and unbinding the local function spaces.
+  /**
+     @}
+   */
 
-         @{
-       */
-      void onBindLFSUV(const EG & eg,
-                       const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
-      void onBindLFSV(const EG & eg,
-                      const LFSV_S & lfsv_s);
-      void onBindLFSUVInside(const IG & ig,
-                             const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
-      void onBindLFSVInside(const IG & ig,
-                            const LFSV_S & lfsv_s);
-      void onBindLFSUVOutside(const IG & ig,
-                              const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
-                              const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
-      void onBindLFSVOutside(const IG & ig,
-                             const LFSV_S & lfsv_s,
-                             const LFSV_N & lfsv_n);
-      void onBindLFSUVCoupling(const IG & ig,
-                               const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
-                               const LFSU_N & lfsu_n, const LFSV_N & lfsv_n
-                               const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
-      void onBindLFSVCoupling(const IG & ig,
-                              const LFSV_S & lfsv_s,
-                              const LFSV_N & lfsv_n,
-                              const LFSV_Coupling & lfsv_coupling);
+  /**
+     @name Notifications
 
-      void onUnbindLFSUV(const EG & eg,
+     Notification methods called by the global assembler when
+     binding and unbinding the local function spaces.
+
+     @{
+   */
+  void onBindLFSUV(const EG & eg,
+                   const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
+  void onBindLFSV(const EG & eg,
+                  const LFSV_S & lfsv_s);
+  void onBindLFSUVInside(const IG & ig,
                          const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
-      void onUnbindLFSV(const EG & eg,
+  void onBindLFSVInside(const IG & ig,
                         const LFSV_S & lfsv_s);
-      void onUnbindLFSUVInside(const IG & ig,
-                               const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
-      void onUnbindLFSVInside(const IG & ig,
-                              const LFSV_S & lfsv_s);
-      void onUnbindLFSUVOutside(const IG & ig,
-                                const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
-                                const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
-      void onUnbindLFSVOutside(const IG & ig,
-                               const LFSV_S & lfsv_s,
-                               const LFSV_N & lfsv_n);
-      void onUnbindLFSUVCoupling(const IG & ig,
-                                 const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
-                                 const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
-                                 const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
-      void onUnbindLFSVCoupling(const IG & ig,
-                                const LFSV_S & lfsv_s,
-                                const LFSV_N & lfsv_n,
-                                const LFSV_Coupling & lfsv_coupling);
+  void onBindLFSUVOutside(const IG & ig,
+                          const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                          const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
+  void onBindLFSVOutside(const IG & ig,
+                         const LFSV_S & lfsv_s,
+                         const LFSV_N & lfsv_n);
+  void onBindLFSUVCoupling(const IG & ig,
+                           const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                           const LFSU_N & lfsu_n, const LFSV_N & lfsv_n
+                           const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
+  void onBindLFSVCoupling(const IG & ig,
+                          const LFSV_S & lfsv_s,
+                          const LFSV_N & lfsv_n,
+                          const LFSV_Coupling & lfsv_coupling);
 
-      /** @} */
+  void onUnbindLFSUV(const EG & eg,
+                     const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
+  void onUnbindLFSV(const EG & eg,
+                    const LFSV_S & lfsv_s);
+  void onUnbindLFSUVInside(const IG & ig,
+                           const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
+  void onUnbindLFSVInside(const IG & ig,
+                          const LFSV_S & lfsv_s);
+  void onUnbindLFSUVOutside(const IG & ig,
+                            const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                            const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
+  void onUnbindLFSVOutside(const IG & ig,
+                           const LFSV_S & lfsv_s,
+                           const LFSV_N & lfsv_n);
+  void onUnbindLFSUVCoupling(const IG & ig,
+                             const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                             const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
+                             const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
+  void onUnbindLFSVCoupling(const IG & ig,
+                            const LFSV_S & lfsv_s,
+                            const LFSV_N & lfsv_n,
+                            const LFSV_Coupling & lfsv_coupling);
 
-      /**
-         @name Loading trial space coefficients
+  /** @} */
 
-         Tells the engine to load the local coefficients for the given
-         local function space.
+  /**
+     @name Loading trial space coefficients
 
-         @{
-       */
-      void loadCoefficientsLFSUInside(const LFSU_S & lfsu_s);
-      void loadCoefficientsLFSUOutside(const LFSU_N & lfsu_n);
-      void loadCoefficientsLFSUCoupling(const LFSU_Coupling & lfsu_coupling);
-      /** @} */
+     Tells the engine to load the local coefficients for the given
+     local function space.
+
+     @{
+   */
+  void loadCoefficientsLFSUInside(const LFSU_S & lfsu_s);
+  void loadCoefficientsLFSUOutside(const LFSU_N & lfsu_n);
+  void loadCoefficientsLFSUCoupling(const LFSU_Coupling & lfsu_coupling);
+  /** @} */
 
 
-      /**
-         @name Assign the assembler target objects
+  /**
+     @name Assign the assembler target objects
 
-         These methods assign the objects into which the assembler
-         should assemble i.e. the solution vector from which the local
-         coefficients are to be extracted.
+     These methods assign the objects into which the assembler
+     should assemble i.e. the solution vector from which the local
+     coefficients are to be extracted.
 
-         @{
-       */
-      void setSolution(const X& x);
-      void setPattern(const P& p);
-      void setJacobian(const J & j);
-      void setResidual(const R& r);
-      /** @} */
+     @{
+   */
+  void setSolution(const X& x);
+  void setPattern(const P& p);
+  void setJacobian(const J & j);
+  void setResidual(const R& r);
+  /** @} */
 
-    };
+};
 
-    /** \brief The local assembler which provides the engines that
-        drive the global assembler.
+/** \brief The local assembler which provides the engines that
+    drive the global assembler.
 
-        The local assembler provides engines for the standard
-        operations of the grid operator. This includes setting up the
-        pattern, computing the residual and the jacobian matrix.
+    The local assembler provides engines for the standard
+    operations of the grid operator. This includes setting up the
+    pattern, computing the residual and the jacobian matrix.
 
-        It also provides a standard interface which may be used by
-        implementations of time stepping methods.
+    It also provides a standard interface which may be used by
+    implementations of time stepping methods.
 
-     */
-    template<typename B, typename CU, typename CV>
-    class LocalAssemblerInterface : public LocalAssemblerBase<B,CU,CV>
-    {
-    public:
+ */
+template<typename B, typename CU, typename CV>
+class LocalAssemblerInterface : public LocalAssemblerBase<B, CU, CV>
+{
+public:
 
-      /** @name Notification functions for time step controller
-          @{
-      */
+  /** @name Notification functions for time step controller
+      @{
+  */
 
-      //! Set current time of assembling
-      template<class TT>
-      void setTime(TT time);
+  //! Set current time of assembling
+  template<class TT>
+  void setTime(TT time);
 
-      //! Notify local assembler about upcoming time step
-      template<typename TT>
-      void preStep (TT time, TT dt, std::size_t stages);
+  //! Notify local assembler about upcoming time step
+  template<typename TT>
+  void preStep (TT time, TT dt, std::size_t stages);
 
-      //! Notify local assembler about completion of time step
-      void postStep ();
+  //! Notify local assembler about completion of time step
+  void postStep ();
 
-      //! Notify local assembler about upcoming time step stage
-      template<typename TT>
-      void preStage (TT time, std::size_t stage);
+  //! Notify local assembler about upcoming time step stage
+  template<typename TT>
+  void preStage (TT time, std::size_t stage);
 
-      //! Notify local assembler about completion of time step stage
-      void postStage ();
+  //! Notify local assembler about completion of time step stage
+  void postStage ();
 
-      //! Suggest a valid time step size
-      template<typename TT>
-      TT suggestTimestep (TT dt) const;
+  //! Suggest a valid time step size
+  template<typename TT>
+  TT suggestTimestep (TT dt) const;
 
-      /** @} */
+  /** @} */
 
-      //! Set current weight of assembling
-      template<class RF>
-      void setWeight(RF weight);
+  //! Set current weight of assembling
+  template<class RF>
+  void setWeight(RF weight);
 
-      /** @name Access to the assembler engines
-          @{
-      */
-      LocalPatternAssemblerEngine & localPatternAssemblerEngine(P & p);
-      LocalResidualAssemblerEngine & localResidualAssemblerEngine(R & r, const X & x);
-      LocalJacobianAssemblerEngine & localJacobianAssemblerEngine(A & a, const X & x);
-      LocalResidualJacobianAssemblerEngine & localResidualJacobianAssemblerEngine(R & r, A & a, const X & x);
-      /** @} */
+  /** @name Access to the assembler engines
+      @{
+  */
+  LocalPatternAssemblerEngine & localPatternAssemblerEngine(P & p);
+  LocalResidualAssemblerEngine & localResidualAssemblerEngine(R & r, const X & x);
+  LocalJacobianAssemblerEngine & localJacobianAssemblerEngine(A & a, const X & x);
+  LocalResidualJacobianAssemblerEngine & localResidualJacobianAssemblerEngine(R & r, A & a, const X & x);
+  /** @} */
 
-      /**  @name Assembler engines
-           @{
-      */
-      class LocalPatternAssemblerEngine : public LocalAssemblerEngine {};
-      class LocalResidualAssemblerEngine : public LocalAssemblerEngine {};
-      class LocalJacobianAssemblerEngine : public LocalAssemblerEngine {};
-      class LocalResidualJacobianAssemblerEngine : public LocalAssemblerEngine {};
-      /** @} */
+  /**  @name Assembler engines
+       @{
+  */
+  class LocalPatternAssemblerEngine : public LocalAssemblerEngine {};
+  class LocalResidualAssemblerEngine : public LocalAssemblerEngine {};
+  class LocalJacobianAssemblerEngine : public LocalAssemblerEngine {};
+  class LocalResidualJacobianAssemblerEngine : public LocalAssemblerEngine {};
+  /** @} */
 
-    };
+};
 
-    /** \brief The grid operator represents an operator mapping which
-        corresponds to the (possibly nonlinear) algebraic problem
-        resulting from the discretization of a PDE.
+/** \brief The grid operator represents an operator mapping which
+    corresponds to the (possibly nonlinear) algebraic problem
+    resulting from the discretization of a PDE.
 
-        A grid operator provides methods which allow its evaluation as
-        well as the computation of its jacobian matrix. It therefore
-        provides all functionality required for a direct application
-        of the Newton method.
+    A grid operator provides methods which allow its evaluation as
+    well as the computation of its jacobian matrix. It therefore
+    provides all functionality required for a direct application
+    of the Newton method.
 
-        For numerical reasons, the field type of the jacobian matrix
-        is allowed to differ from the operator's range field type.
+    For numerical reasons, the field type of the jacobian matrix
+    is allowed to differ from the operator's range field type.
 
-    */
-    template<typename GFSU, typename GFSV,
-             typename MB, typename DF, typename RF, typename JF>
-    class GridOperatorInterface{
-    public:
+*/
+template<typename GFSU, typename GFSV,
+         typename MB, typename DF, typename RF, typename JF>
+class GridOperatorInterface {
+public:
 
-      //! The traits class
-      typedef GridOperatorTraits
-      <GFSU,GFSV,MB,DF,RF,JF,CU,CV,AssemblerInterface,LocalAssemblerInterface> Traits;
+  //! The traits class
+  typedef GridOperatorTraits
+  <GFSU, GFSV, MB, DF, RF, JF, CU, CV, AssemblerInterface, LocalAssemblerInterface> Traits;
 
-      //! Determines the sparsity pattern of the jacobian matrix
-      template<typename P>
-      void fill_pattern (P& globalpattern) const;
+  //! Determines the sparsity pattern of the jacobian matrix
+  template<typename P>
+  void fill_pattern (P& globalpattern) const;
 
-      //! Evaluates the grid operator for a given point \a x in its
-      //! domain
-      template<typename X, typename R>
-      void residual (const X& x, R& r) const;
+  //! Evaluates the grid operator for a given point \a x in its
+  //! domain
+  template<typename X, typename R>
+  void residual (const X& x, R& r) const;
 
-      //! Evaluates the jacobian matrix of the grid operator for a
-      //! given point \a x in its domain
-      template<typename X, typename A>
-      void jacobian (const X& x, A& a) const;
+  //! Evaluates the jacobian matrix of the grid operator for a
+  //! given point \a x in its domain
+  template<typename X, typename A>
+  void jacobian (const X& x, A& a) const;
 
-      //! @name Access to the assembler objects
-      //! @{
-      Assembler & assembler();
-      LocalAssemblerInterface & localAssembler();
-      //! @}
+  //! @name Access to the assembler objects
+  //! @{
+  Assembler & assembler();
+  LocalAssemblerInterface & localAssembler();
+  //! @}
 
-      //! @name Access to the grid function spaces
-      //! @{
-      const GFSU& trialGridFunctionSpace() const;
-      const GFSV& testGridFunctionSpace() const;
-      typename GFSU::Traits::SizeType globalSizeU () const;
-      typename GFSV::Traits::SizeType globalSizeV () const;
-      //! @}
+  //! @name Access to the grid function spaces
+  //! @{
+  const GFSU& trialGridFunctionSpace() const;
+  const GFSV& testGridFunctionSpace() const;
+  typename GFSU::Traits::SizeType globalSizeU () const;
+  typename GFSV::Traits::SizeType globalSizeV () const;
+  //! @}
 
-      //! Interpolate xnew from f, taking unconstrained values from xold.
-      /**
-       * \note The exact type of F will depend on the GridOperator and
-       *       may be a more complicated object than a simple
-       *       GridFunction for scenarios like MultiDomain or
-       *       grid-glue.
-       */
-      template<typename F>
-      void interpolate(const typename Traits::Domain& xold,
-                       const F& f,
-                       typename Traits::Domain& xnew);
+  //! Interpolate xnew from f, taking unconstrained values from xold.
+  /**
+   * \note The exact type of F will depend on the GridOperator and
+   *       may be a more complicated object than a simple
+   *       GridFunction for scenarios like MultiDomain or
+   *       grid-glue.
+   */
+  template<typename F>
+  void interpolate(const typename Traits::Domain& xold,
+                   const F& f,
+                   typename Traits::Domain& xnew);
 
-      //! Set up the passed-in tuple of GridOperators to cooperate, e.g.
-      //! for a time-stepping method. The caller guarantees that the
-      //! GridOperators will always be invoked in the order that they
-      //! appear in the tuple.
-      /**
-         \note This function is typically called by a superior grid
-         operator which wraps the grid operators given in the
-         tuple. It is assumed that all types in \a tuple are
-         specializations of the same template class which calls the
-         Dune::PDELab::GridOperatorInterface::setupGridOperator
-         function itself.
+  //! Set up the passed-in tuple of GridOperators to cooperate, e.g.
+  //! for a time-stepping method. The caller guarantees that the
+  //! GridOperators will always be invoked in the order that they
+  //! appear in the tuple.
+  /**
+     \note This function is typically called by a superior grid
+     operator which wraps the grid operators given in the
+     tuple. It is assumed that all types in \a tuple are
+     specializations of the same template class which calls the
+     Dune::PDELab::GridOperatorInterface::setupGridOperator
+     function itself.
 
-         \warning After calling this function, all data-handling methods
-         (onBind...(), onUnbind...(), loadCoefficients() ) MUST always
-         be called for all children and in the same order as the one
-         passed to this function. Failure to do so will result in wrong
-         assembly results!
+     \warning After calling this function, all data-handling methods
+     (onBind...(), onUnbind...(), loadCoefficients() ) MUST always
+     be called for all children and in the same order as the one
+     passed to this function. Failure to do so will result in wrong
+     assembly results!
 
-       */
-      template<typename GridOperatorTuple>
-      static void setupGridOperators(GridOperatorTuple& tuple);
+   */
+  template<typename GridOperatorTuple>
+  static void setupGridOperators(GridOperatorTuple& tuple);
 
-    };
-    //! \}
-  };
+};
+//! \}
+};
 };
 
 /**

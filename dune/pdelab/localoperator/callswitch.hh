@@ -33,6 +33,7 @@ struct HasJacobianApplyVolumePostSkeleton
 {
   template<typename LO>
   auto require(LO&& lo) -> decltype(
+
     lo.jacobian_apply_volume_post_skeleton(std::declval<Args>()...)
   );
 };
@@ -88,7 +89,12 @@ struct LocalAssemblerCallSwitch
   {
   }
   template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-  static void alpha_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r, int iMat)
+  static void alpha_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
+  {
+  }
+
+  template<typename EG, typename IGS, typename LFSU, typename X, typename LFSV, typename R>
+  static void alpha_zero_thickness (const LA& la, const EG& eg, const IGS& igs, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
   {
   }
   template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
@@ -155,29 +161,41 @@ struct LocalAssemblerCallSwitch
   static void nonlinear_jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y)
   {
   }
+
+  template<typename EG, typename IGS, typename LFSU, typename X, typename LFSV, typename M>
+  static void nonlinear_jacobian_zero_thickness (const LA& la, const EG& eg, const IGS& igs, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
+  {
+  }
+
   template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
   static void nonlinear_jacobian_apply_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const X& z, const LFSV& lfsv, Y& y)
   {
   }
   template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
   static void nonlinear_jacobian_apply_skeleton (const LA& la, const IG& ig,
-                                                 const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
-                                                 const LFSU& lfsu_n, const X& x_n, const X& z_n, const LFSV& lfsv_n,
-                                                 Y& y_s, Y& y_n)
+      const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+      const LFSU& lfsu_n, const X& x_n, const X& z_n, const LFSV& lfsv_n,
+      Y& y_s, Y& y_n)
   {
   }
   template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
   static void nonlinear_jacobian_apply_boundary (const LA& la, const IG& ig,
-                                                 const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
-                                                 Y& y_s)
+      const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+      Y& y_s)
   {
   }
 
 
   template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-  static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, int iMat, M & mat)
+  static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
   {
   }
+
+  template<typename EG, typename IGS, typename LFSU, typename X, typename LFSV, typename M>
+  static void jacobian_zero_thickness (const LA& la, const EG& eg, const IGS& igs, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
+  {
+  }
+
   template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
   static void jacobian_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M& mat)
   {
@@ -205,6 +223,13 @@ struct LocalAssemblerCallSwitch<LA, true>
   {
     la.pattern_volume(lfsu, lfsv, pattern);
   }
+
+  template<typename LFSU, typename LFSV, typename LocalPattern>
+  static void pattern_zero_thickness (const LA& la, const LFSU& lfsu, const LFSV& lfsv, LocalPattern& pattern)
+  {
+    la.pattern_volume(lfsu, lfsv, pattern);
+  }
+
   template<typename LFSU, typename LFSV, typename LocalPattern>
   static void pattern_volume_post_skeleton
   ( const LA& la,
@@ -235,6 +260,14 @@ struct LocalAssemblerCallSwitch<LA, true>
   {
     la.alpha_volume(eg, lfsu, x, lfsv, r, iMat);
   }
+
+  template<typename EG, typename IGS, typename LFSU, typename X, typename LFSV, typename R>
+  static void alpha_zero_thickness (const LA& la, const EG& eg, const IGS& igs, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r, std::vector<int> indices)
+  {
+    la.alpha_zero_thickness(eg, igs,  lfsu, x, lfsv, r, indices);
+  }
+
+
   template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
   static void alpha_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
   {
@@ -283,11 +316,22 @@ struct LocalAssemblerCallSwitch<LA, true>
   template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
   static void jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
   {
+    std::cout << "CHECKING JACOBIAN APPLY " << std::endl;
     static_assert(
       models<impl::HasJacobianApplyVolume<EG, LFSU, X, LFSV, Y&>, LA>(),
       "Your local operator does not implement jacobian_apply_volume() for linear problems (without explicit Jacobian evaluation point)"
     );
     la.jacobian_apply_volume(eg, lfsu, x, lfsv, y);
+  }
+
+  template<typename EG, typename IGS, typename LFSU, typename X, typename LFSV, typename Y>
+  static void jacobian_apply_zero_thickness (const LA& la, const EG& eg, const IGS& igs, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
+  {
+    static_assert(
+      models<impl::HasJacobianApplyVolume<EG, LFSU, X, LFSV, Y&>, LA>(),
+      "Your local operator does not implement jacobian_apply_volume() for linear problems (without explicit Jacobian evaluation point)"
+    );
+    la.jacobian_apply_zero_thickness(eg, igs, lfsu, x, lfsv, y);
   }
 
   template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
@@ -346,26 +390,33 @@ struct LocalAssemblerCallSwitch<LA, true>
   }
   template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
   static void nonlinear_jacobian_apply_skeleton (const LA& la, const IG& ig,
-                                                 const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
-                                                 const LFSU& lfsu_n, const X& x_n, const X& z_n, const LFSV& lfsv_n,
-                                                 Y& y_s, Y& y_n)
+      const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+      const LFSU& lfsu_n, const X& x_n, const X& z_n, const LFSV& lfsv_n,
+      Y& y_s, Y& y_n)
   {
     la.jacobian_apply_skeleton(ig, lfsu_s, x_s, z_s, lfsv_s, lfsu_n, x_n, z_n, lfsv_n, y_s, y_n);
   }
   template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
   static void nonlinear_jacobian_apply_boundary (const LA& la, const IG& ig,
-                                                 const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
-                                                 Y& y_s)
+      const LFSU& lfsu_s, const X& x_s, const X& z_s, const LFSV& lfsv_s,
+      Y& y_s)
   {
     la.jacobian_apply_boundary(ig, lfsu_s, x_s, z_s, lfsv_s, y_s);
   }
 
 
   template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-  static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, int iMat, M & mat)
+  static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat, int iMat)
   {
-    la.jacobian_volume(eg, lfsu, x, lfsv, iMat, mat);
+    la.jacobian_volume(eg, lfsu, x, lfsv, mat, iMat);
   }
+
+  template<typename EG, typename IGS, typename LFSU, typename X, typename LFSV, typename M>
+  static void jacobian_zero_thickness (const LA& la, const EG& eg, const IGS& igs, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat, std::vector<int> indices)
+  {
+    la.jacobian_zero_thickness(eg, igs, lfsu, x, lfsv, mat, indices);
+  }
+
   template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
   static void jacobian_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
   {

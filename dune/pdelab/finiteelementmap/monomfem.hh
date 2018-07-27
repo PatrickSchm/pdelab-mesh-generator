@@ -20,21 +20,21 @@ namespace Dune {
     //! \ingroup FiniteElementMap
     template<class D, class R, int d, int p>
     class MonomLocalFiniteElementMap
-    : public SimpleLocalFiniteElementMap< Dune::MonomialLocalFiniteElement<D,R,d,p> >
+      : public SimpleLocalFiniteElementMap< Dune::MonomialLocalFiniteElement<D,R,d,p>,d>
     {
     public:
 
       MonomLocalFiniteElementMap (const Dune::GeometryType& type)
-        : SimpleLocalFiniteElementMap< Dune::MonomialLocalFiniteElement<D,R,d,p> >(Dune::MonomialLocalFiniteElement<D,R,d,p>(type)), _gt(type)
+        : SimpleLocalFiniteElementMap< Dune::MonomialLocalFiniteElement<D,R,d,p>,d>(Dune::MonomialLocalFiniteElement<D,R,d,p>(type)), _gt(type)
       {
       }
 
-      bool fixedSize() const
+      static constexpr bool fixedSize()
       {
         return true;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr bool hasDOFs(int codim)
       {
         return codim == 0;
       }
@@ -44,7 +44,7 @@ namespace Dune {
         return gt == _gt ? Dune::MonomImp::Size<d,p>::val : 0;
       }
 
-      std::size_t maxLocalSize() const
+      static constexpr std::size_t maxLocalSize()
       {
         return MonomImp::Size<d,p>::val;
       }
@@ -74,6 +74,10 @@ namespace Dune {
       static FEFactory feFactory;
 
     public:
+
+      //! The dimension of the finite elements returned by this map.
+      static constexpr int dimension = Geometry::mydimension;
+
       MonomFiniteElementMap() : Base(feFactory) { }
     };
 

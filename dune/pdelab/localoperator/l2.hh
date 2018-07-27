@@ -1,4 +1,4 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_LOCALOPERATOR_L2_HH
 #define DUNE_PDELAB_LOCALOPERATOR_L2_HH
 
@@ -9,12 +9,10 @@
 
 #include<dune/geometry/type.hh>
 #include<dune/geometry/referenceelements.hh>
-#include<dune/geometry/quadraturerules.hh>
 
 #include<dune/localfunctions/common/interfaceswitch.hh>
 
 #include<dune/pdelab/common/quadraturerules.hh>
-#include<dune/pdelab/common/referenceelements.hh>
 
 #include"defaultimp.hh"
 #include"pattern.hh"
@@ -33,10 +31,10 @@ namespace Dune {
      \int_\Omega uv dx
      * \f}
      */
-    class L2 : public NumericalJacobianApplyVolume<L2>,
-               public FullVolumePattern,
-               public LocalOperatorDefaultFlags,
-               public InstationaryLocalOperatorDefaultMethods<double>
+    class L2 :
+      public FullVolumePattern,
+      public LocalOperatorDefaultFlags,
+      public InstationaryLocalOperatorDefaultMethods<double>
     {
     public:
       // Pattern assembly flags
@@ -89,6 +87,13 @@ namespace Dune {
           }
       }
 
+      // apply jacobian of volume term
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+      void jacobian_apply_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y) const
+      {
+        alpha_volume(eg,lfsu,x,lfsv,y);
+      }
+
       // Jacobian of volume term
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
@@ -135,10 +140,10 @@ namespace Dune {
      \int_\Omega uv dx
      * \f}
      */
-    class PowerL2 : public NumericalJacobianApplyVolume<PowerL2>,
-                    public FullVolumePattern,
-                    public LocalOperatorDefaultFlags,
-                    public InstationaryLocalOperatorDefaultMethods<double>
+    class PowerL2 :
+      public FullVolumePattern,
+      public LocalOperatorDefaultFlags,
+      public InstationaryLocalOperatorDefaultMethods<double>
     {
     public:
       // Pattern assembly flags
@@ -157,6 +162,13 @@ namespace Dune {
       {
         for(unsigned int i=0; i<TypeTree::degree(lfsu); ++i)
           scalar_operator.alpha_volume(eg,lfsu.child(i),x,lfsv.child(i),r);
+      }
+
+      // apply jacobian of volume term
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+      void jacobian_apply_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y) const
+      {
+        alpha_volume(eg,lfsu,x,lfsv,y);
       }
 
       // Jacobian of volume term

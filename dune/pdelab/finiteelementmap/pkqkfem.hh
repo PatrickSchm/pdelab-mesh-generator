@@ -66,9 +66,12 @@ namespace Dune {
         class PkQkLocalFiniteElementMap
         {
             //! Type of finite element from local functions
-            typedef LocalFiniteElementVirtualInterface<Dune::LocalBasisTraits<D,d,Dune::FieldVector<D,d>,R,1,Dune::FieldVector<R,1>,Dune::FieldMatrix<R,1,d>,0> > FiniteElementType;
+            typedef LocalFiniteElementVirtualInterface<Dune::LocalBasisTraits<D,d,Dune::FieldVector<D,d>,R,1,Dune::FieldVector<R,1>,Dune::FieldMatrix<R,1,d> > > FiniteElementType;
         public:
             typedef FiniteElementMapTraits<FiniteElementType> Traits;
+
+            //! The dimension of the finite elements returned by this map.
+            static constexpr int dimension = d;
 
             /** \brief Default constructor.  Constructs a space of order maxP */
             PkQkLocalFiniteElementMap ()
@@ -108,7 +111,7 @@ namespace Dune {
                 DUNE_THROW(Exception, "We can only handle cubes and simplices");
             }
 
-            bool fixedSize() const
+            static constexpr bool fixedSize()
             {
                 return false;
             }
@@ -131,7 +134,7 @@ namespace Dune {
                 DUNE_THROW(NotImplemented, "PkQkLocalFiniteElement is not fixed-size!");
             }
 
-            std::size_t maxLocalSize() const
+            static constexpr std::size_t maxLocalSize()
             {
                 return (1<<d);
             }

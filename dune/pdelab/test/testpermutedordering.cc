@@ -86,8 +86,7 @@ template<class GV>
 static void testpermutedordering(const GV& gv)
 {
   // instantiate finite element maps
-  Dune::GeometryType gt;
-  gt.makeCube(2);
+  auto gt = Dune::GeometryTypes::quadrilateral;
   typedef Dune::PDELab::P0LocalFiniteElementMap<float,double,GV::dimension> P0FEM;
   P0FEM p0fem(gt);
   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,1> Q12DFEM;
@@ -97,7 +96,7 @@ static void testpermutedordering(const GV& gv)
 
   typedef Dune::PDELab::NoConstraints CON;
 
-  typedef Dune::PDELab::istl::VectorBackend<> VBE;
+  typedef Dune::PDELab::ISTL::VectorBackend<> VBE;
 
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,CON,VBE> P0GFS;
@@ -117,7 +116,7 @@ static void testpermutedordering(const GV& gv)
 
   P1GFS p1gfs(gfs1,gfs1,gfs1,VBE(),{{1,1,1}});
 
-  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::fixed,6> NVBE;
+  typedef Dune::PDELab::ISTL::VectorBackend<Dune::PDELab::ISTL::Blocking::fixed,6> NVBE;
 
   typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,2,NVBE,Dune::PDELab::InterleavedOrderingTag> PGFS;
   std::vector<std::size_t> p_gfs_block_sizes(2);

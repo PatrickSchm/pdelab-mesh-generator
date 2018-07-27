@@ -1,6 +1,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_OVLP_AMG_DG_BACKEND_HH
 #define DUNE_PDELAB_BACKEND_ISTL_OVLP_AMG_DG_BACKEND_HH
 
+// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
+#include "ensureistlinclude.hh"
+
 #include <dune/common/parametertree.hh>
 #include <dune/common/power.hh>
 
@@ -323,10 +326,10 @@ namespace Dune {
     using CGW = Dune::PDELab::Backend::Vector<CGGFS,typename CGPrec::range_type::field_type>;
 
     // define the category
-    enum {
-      //! \brief The category the preconditioner is part of.
-      category=Dune::SolverCategory::overlapping
-    };
+    SolverCategory::Category category() const override
+    {
+      return SolverCategory::overlapping;
+    }
 
     /*! \brief Constructor.
 

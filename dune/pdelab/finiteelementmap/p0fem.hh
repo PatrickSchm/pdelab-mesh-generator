@@ -14,22 +14,22 @@ namespace Dune {
     //! \ingroup FiniteElementMap
     template<class D, class R, int d>
     class P0LocalFiniteElementMap
-      : public SimpleLocalFiniteElementMap< Dune::P0LocalFiniteElement<D,R,d> >
+      : public SimpleLocalFiniteElementMap<Dune::P0LocalFiniteElement<D,R,d>,d>
     {
     public:
 
       P0LocalFiniteElementMap (const Dune::GeometryType& type)
-        : SimpleLocalFiniteElementMap< Dune::P0LocalFiniteElement<D,R,d> >(Dune::P0LocalFiniteElement<D,R,d>(type))
+        : SimpleLocalFiniteElementMap<Dune::P0LocalFiniteElement<D,R,d>,d>(Dune::P0LocalFiniteElement<D,R,d>(type))
         , _gt(type)
       {
       }
 
-      bool fixedSize() const
+      static constexpr bool fixedSize()
       {
         return true;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr bool hasDOFs(int codim)
       {
         return codim == 0;
       }
@@ -39,7 +39,7 @@ namespace Dune {
         return gt == _gt ? 1 : 0;
       }
 
-      std::size_t maxLocalSize() const
+      static constexpr std::size_t maxLocalSize()
       {
         return 1;
       }

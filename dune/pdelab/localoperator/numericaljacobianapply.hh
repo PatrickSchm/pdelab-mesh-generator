@@ -29,32 +29,99 @@ namespace PDELab {
  * \tparam Imp Type of the derived class (CRTP-trick).
  */
 template<typename Imp>
-class NumericalJacobianApplyVolume
-  : public NumericalNonlinearJacobianApplyVolume<Imp>
+    class NumericalJacobianApplyVolume
+      : public NumericalNonlinearJacobianApplyVolume<Imp>
+    {
+    public:
+
+      // We need to reimport the name from the base class; otherwise clang plays stupid and refuses to
+      // find the overload in the base class
+      using NumericalNonlinearJacobianApplyVolume<Imp>::jacobian_apply_volume;
+
+      NumericalJacobianApplyVolume ()
+        : NumericalNonlinearJacobianApplyVolume<Imp>(1e-7)
+        , epsilon(1e-7)
+      {}
+
+      NumericalJacobianApplyVolume (double epsilon_)
+        : NumericalNonlinearJacobianApplyVolume<Imp>(epsilon_)
+        , epsilon(epsilon_)
+      {}
+
+      //! apply local jacobian of the volume term
+      template<typename EG, typename LFSU, typename X, typename LFSV,
+               typename Y>
+      void jacobian_apply_volume
+      ( const EG& eg,
+        const LFSU& lfsu, const X& x, const LFSV& lfsv,
+        Y& y, int iMat) const
+      {
+        typedef typename X::value_type D;
+        typedef typename Y::value_type R;
+        typedef LocalVector<R,TestSpaceTag,typename Y::weight_type> ResidualVector;
+        typedef typename ResidualVector::WeightedAccumulationView ResidualView;
+
+        const int m=lfsv.size();
+        const int n=lfsu.size();
+
+        X u(x);
+
+        // Notice that in general lfsv.size() != y.size()
+        ResidualVector down(y.size()),up(y.size());
+        ResidualView downview = down.weightedAccumulationView(y.weight());
+        ResidualView upview = up.weightedAccumulationView(y.weight());
+
+        asImp().alpha_volume(eg,lfsu,u,lfsv,downview);
+        for (int j=0; j<n; j++) // loop over columns
+        {
+          up = 0.0;
+          D delta = epsilon*(1.0+std::abs(u(lfsu,j)));
+          u(lfsu,j) += delta;
+          asImp().alpha_volume(eg,lfsu,u,lfsv,upview, iMat);
+          for (int i=0; i<m; i++)
+            y.rawAccumulate(lfsv,i,((up(lfsv,i)-down(lfsv,i))/delta)*x(lfsu,j));
+          u(lfsu,j) = x(lfsu,j);
+        }
+      }
+
+    private:
+      const double epsilon; // problem: this depends on data type R!
+      Imp& asImp () { return static_cast<Imp &> (*this); }
+      const Imp& asImp () const { return static_cast<const Imp &>(*this); }
+    };
+
+
+
+template<typename Imp>
+class NumericalJacobianApplyZeroThickness
+  : public NumericalNonlinearJacobianApplyZeroThickness<Imp>
 {
 public:
+
   // We need to reimport the name from the base class; otherwise clang plays stupid and refuses to
   // find the overload in the base class
-  using NumericalNonlinearJacobianApplyVolume<Imp>::jacobian_apply_volume;
+  using NumericalNonlinearJacobianApplyZeroThickness<Imp>::jacobian_apply_zero_thickness;
 
-  NumericalJacobianApplyVolume ()
-    : NumericalNonlinearJacobianApplyVolume<Imp>(1e-7)
+  NumericalJacobianApplyZeroThickness ()
+    : NumericalNonlinearJacobianApplyZeroThickness<Imp>(1e-7)
     , epsilon(1e-7)
   {}
 
-  NumericalJacobianApplyVolume (double epsilon_)
-    : NumericalNonlinearJacobianApplyVolume<Imp>(epsilon_)
+  NumericalJacobianApplyZeroThickness (double epsilon_)
+    : NumericalNonlinearJacobianApplyZeroThickness<Imp>(epsilon_)
     , epsilon(epsilon_)
   {}
 
   //! apply local jacobian of the volume term
-  template<typename EG, typename LFSU, typename X, typename LFSV,
+  template<typename EG, typename IGS, typename LFSU, typename X, typename LFSV,
            typename Y>
-  void jacobian_apply_volume
-  ( const EG& eg,
+  void jacobian_apply_zero_thickness
+  ( const EG& eg, const IGS& igs,
     const LFSU& lfsu, const X& x, const LFSV& lfsv,
     Y& y) const
   {
+
+    std::cout << "here" << std::endl;
     typedef typename X::value_type D;
     typedef typename Y::value_type R;
     typedef LocalVector<R, TestSpaceTag, typename Y::weight_type> ResidualVector;
@@ -70,13 +137,13 @@ public:
     ResidualView downview = down.weightedAccumulationView(y.weight());
     ResidualView upview = up.weightedAccumulationView(y.weight());
 
-    asImp().alpha_volume(eg, lfsu, u, lfsv, downview);
+    asImp().alpha_zero_thickness(eg, igs, lfsu, u, lfsv, downview);
     for (int j = 0; j < n; j++) // loop over columns
     {
       up = 0.0;
       D delta = epsilon * (1.0 + std::abs(u(lfsu, j)));
       u(lfsu, j) += delta;
-      asImp().alpha_volume(eg, lfsu, u, lfsv, upview);
+      asImp().alpha_zero_thickness(eg, igs, lfsu, u, lfsv, upview);
       for (int i = 0; i < m; i++)
         y.rawAccumulate(lfsv, i, ((up(lfsv, i) - down(lfsv, i)) / delta)*x(lfsu, j));
       u(lfsu, j) = x(lfsu, j);
@@ -88,6 +155,8 @@ private:
   Imp& asImp () { return static_cast<Imp &> (*this); }
   const Imp& asImp () const { return static_cast<const Imp &>(*this); }
 };
+
+
 
 //! Implements linear and nonlinear versions jacobian_apply_volume_post_skeleton() based on
 //! alpha_volume_post_skeleton()

@@ -5,7 +5,6 @@
 #include <dune/common/fvector.hh>
 #include <dune/geometry/referenceelements.hh>
 
-#include <dune/pdelab/common/referenceelements.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
@@ -21,7 +20,7 @@
  */
 template<typename P, typename T, typename X>
 class DarcyVelocityFromHeadFEM
-  : public Dune::PDELab::GridFunctionInterface<
+  : public Dune::PDELab::GridFunctionBase<
   Dune::PDELab::GridFunctionTraits<
     typename T::Traits::GridViewType,
     typename T::Traits::FiniteElementType::Traits::LocalBasisType
@@ -53,7 +52,7 @@ public:
     LBTraits::dimDomain> >;
 
 private:
-  using BaseT = Dune::PDELab::GridFunctionInterface<
+  using BaseT = Dune::PDELab::GridFunctionBase<
     Traits,
     DarcyVelocityFromHeadFEM<P,T,X> >;
 

@@ -3,6 +3,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_DESCRIPTORS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_DESCRIPTORS_HH
 
+// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
+#include "ensureistlinclude.hh"
+
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/istl/forwarddeclarations.hh>
 #include <dune/pdelab/backend/istl/matrixhelpers.hh>
@@ -43,13 +46,11 @@ namespace Dune {
       //! Tag describing an ISTL BlockVector backend.
       struct vector_backend_tag {};
 
-      template<Blocking blocking = Blocking::none, std::size_t block_size_ = 1>
+      template<Blocking blocking = Blocking::none, std::size_t block_size_ = 0>
       struct VectorBackend
       {
 
         using tag = vector_backend_tag;
-
-        static_assert((block_size_ > 0),"block size for FieldVector has to be positive");
 
         using size_type = std::size_t;
 

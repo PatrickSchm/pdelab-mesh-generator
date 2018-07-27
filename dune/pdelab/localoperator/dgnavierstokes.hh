@@ -8,13 +8,12 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/parametertreeparser.hh>
 
-#include <dune/geometry/quadraturerules.hh>
+#include <dune/geometry/referenceelements.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/pdelab/localoperator/idefault.hh>
 
 #include <dune/pdelab/common/quadraturerules.hh>
-#include <dune/pdelab/common/referenceelements.hh>
 #include <dune/pdelab/localoperator/defaultimp.hh>
 #include <dune/pdelab/localoperator/pattern.hh>
 #include <dune/pdelab/localoperator/flags.hh>
@@ -38,7 +37,7 @@ namespace Dune {
       using BC = StokesBoundaryCondition;
       using RF = typename PRM::Traits::RangeField;
 
-      using InstatBase = InstationaryLocalOperatorDefaultMethods<double>;
+      using InstatBase = InstationaryLocalOperatorDefaultMethods<typename PRM::Traits::RangeField>;
       using Real = typename InstatBase::RealType;
 
       static const bool navier = PRM::assemble_navier;
@@ -1095,7 +1094,7 @@ namespace Dune {
                   {
                     for (unsigned int j=0;j<vsize;++j) // test
                       {
-                        auto ten_sum = 1.0;
+                        RF ten_sum = 1.0;
 
                         // Assemble symmetric part for (grad u)^T
                         if(full_tensor)

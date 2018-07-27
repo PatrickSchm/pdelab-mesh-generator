@@ -12,9 +12,9 @@
 #include "../solver.hh"
 
 #if HAVE_EIGEN
-
 #include <Eigen/Eigen>
 #include <Eigen/Sparse>
+#include <Eigen/PardisoSupport>
 
 namespace Dune {
   namespace PDELab {
@@ -52,19 +52,20 @@ namespace Dune {
         using Backend::native;
         // PreconditionerImp preconditioner;
         using Mat = Native<M>;
-        ::Eigen::BiCGSTAB<Mat, PreconditionerImp> solver;
-        solver.setMaxIterations(maxiter);
-        solver.setTolerance(reduction);
+        //::Eigen::BiCGSTAB<Mat, PreconditionerImp> solver;
+        ::Eigen::PardisoLU<Mat> solver;
+        //solver.setMaxIterations(maxiter);
+        //solver.setTolerance(reduction);
         Dune::Timer watch;
         watch.reset();
         solver.compute(native(A));
         native(z) = solver.solve(native(r));
-        double elapsed = watch.elapsed();
+        // double elapsed = watch.elapsed();
 
         res.converged  = solver.info() == ::Eigen::ComputationInfo::Success;
-        res.iterations = solver.iterations();
-        res.elapsed    = elapsed;
-        res.reduction  = solver.error();
+        //res.iterations = solver.iterations();
+        // res.elapsed    = elapsed;
+        // res.reduction  = solver.error();
         res.conv_rate  = 0;
       }
 
@@ -333,16 +334,15 @@ namespace Dune {
         native(z) = solver.solve(native(r));
         double elapsed = watch.elapsed();
 
-        res.converged  = solver.info() == ::Eigen::ComputationInfo::Success;
-        res.iterations = solver.iterations();
-        res.elapsed    = elapsed;
-        res.reduction  = solver.error();
+        // res.converged  = solver.info() == ::Eigen::ComputationInfo::Success;
+        // res.iterations = solver.iterations();
+        // res.elapsed    = elapsed;
+        // res.reduction  = solver.error();
         res.conv_rate  = 0;
       }
     private:
       unsigned int flags_;
     };
-
   } // namespace PDELab
 } // namespace Dune
 

@@ -3,6 +3,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_SEQISTLSOLVERBACKEND_HH
 #define DUNE_PDELAB_BACKEND_ISTL_SEQISTLSOLVERBACKEND_HH
 
+// this is here for backwards compatibility and deprecation warnings, remove after 2.5.0
+#include "ensureistlinclude.hh"
+
 #include <dune/common/deprecated.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
@@ -39,8 +42,6 @@ namespace Dune {
       typedef Y range_type;
       typedef typename X::field_type field_type;
 
-      enum {category=Dune::SolverCategory::sequential};
-
       OnTheFlyOperator (GOS& gos_)
         : gos(gos_)
       {}
@@ -57,6 +58,11 @@ namespace Dune {
         temp = 0.0;
         gos.jacobian_apply(x,temp);
         y.axpy(alpha,temp);
+      }
+
+      SolverCategory::Category category() const override
+      {
+        return SolverCategory::sequential;
       }
 
     private:
@@ -598,6 +604,18 @@ namespace Dune {
       void setparams(Parameters params_)
       {
         params = params_;
+      }
+
+      //! Set whether the AMG should be reused again during call to apply().
+      void setReuse(bool reuse_)
+      {
+        reuse = reuse_;
+      }
+
+      //! Return whether the AMG is reused during call to apply()
+      bool getReuse() const
+      {
+        return reuse;
       }
 
       /*! \brief compute global norm of a vector

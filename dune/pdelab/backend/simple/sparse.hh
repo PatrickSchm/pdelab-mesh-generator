@@ -19,34 +19,23 @@ namespace Dune {
   namespace PDELab {
     namespace Simple {
 
-      template<typename _RowOrdering, typename _ColOrdering>
       class SparseMatrixPattern
         : public std::vector< std::unordered_set<std::size_t> >
       {
 
       public:
 
-        typedef _RowOrdering RowOrdering;
-        typedef _ColOrdering ColOrdering;
-
         typedef std::unordered_set<std::size_t> col_type;
 
         template<typename RI, typename CI>
         void add_link(const RI& ri, const CI& ci)
         {
-          this->resize(_row_ordering.blockCount());
           (*this)[ri.back()].insert(ci.back());
         }
 
-        SparseMatrixPattern(const RowOrdering& row_ordering, const ColOrdering& col_ordering)
-          : _row_ordering(row_ordering)
-          , _col_ordering(col_ordering)
+        SparseMatrixPattern(std::size_t rows)
+        : std::vector< std::unordered_set<std::size_t> >(rows)
         {}
-
-      private:
-
-        const RowOrdering& _row_ordering;
-        const ColOrdering& _col_ordering;
 
       };
 
@@ -117,17 +106,7 @@ namespace Dune {
         template<typename RowCache, typename ColCache>
         using ConstLocalView = ConstUncachedMatrixView<const SparseMatrixContainer,RowCache,ColCache>;
 
-        typedef OrderingBase<
-          typename GFSV::Ordering::Traits::DOFIndex,
-          typename GFSV::Ordering::Traits::ContainerIndex
-          > RowOrdering;
-
-        typedef OrderingBase<
-          typename GFSU::Ordering::Traits::DOFIndex,
-          typename GFSU::Ordering::Traits::ContainerIndex
-          > ColOrdering;
-
-        typedef SparseMatrixPattern<RowOrdering,ColOrdering> Pattern;
+        typedef SparseMatrixPattern Pattern;
 
         template<typename GO>
         SparseMatrixContainer(const GO& go)
@@ -294,12 +273,20 @@ namespace Dune {
           (*this)(ri,ri) = diagonal_entry;
         }
 
+        void clear_row_block(const RowIndex& ri, const ElementType& diagonal_entry)
+        {
+          std::fill(
+            _container->_data.begin() + _container->_rowoffset[ri[0]],
+            _container->_data.begin() + _container->_rowoffset[ri[0]+1], ElementType(0));
+          (*this)(ri,ri) = diagonal_entry;
+        }
+
       protected:
         template<typename GO>
         static void allocate_matrix(std::shared_ptr<Container> & c, const GO & go, const ElementType& e)
         {
           typedef typename Pattern::col_type col_type;
-          Pattern pattern(go.testGridFunctionSpace().ordering(),go.trialGridFunctionSpace().ordering());
+          Pattern pattern(go.testGridFunctionSpace().ordering().blockCount());
           go.fill_pattern(pattern);
 
           c->_rows = go.testGridFunctionSpace().size();

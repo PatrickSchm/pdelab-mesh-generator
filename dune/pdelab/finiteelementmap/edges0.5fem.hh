@@ -37,26 +37,30 @@ namespace Dune {
       }
 
     public:
+
+      //! The dimension of the finite elements returned by this map.
+      static constexpr int dimension = Geometry::mydimension;
+
       EdgeS0_5FiniteElementMap(const VertexOrderFactory &voFactory) :
         Base(feFactory(), voFactory)
       { }
 
-      bool fixedSize() const
+      static constexpr bool fixedSize()
       {
         return true;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr hasDOFs(int codim)
       {
-        return Geometry::dimension - codim == 1;
+        return Geometry::mydimension - codim == 1;
       }
 
-      std::size_t size(GeometryType gt) const
+      static constexpr std::size_t size(GeometryType gt)
       {
-        return gt.isLine() ? 1 : 0;
+        return gt == GeometryTypes::line ? 1 : 0;
       }
 
-      std::size_t maxLocalSize() const
+      static constexpr std::size_t maxLocalSize()
       {
         return Dune::EdgeS0_5Common<Geometry::mydimension>::s;
       }

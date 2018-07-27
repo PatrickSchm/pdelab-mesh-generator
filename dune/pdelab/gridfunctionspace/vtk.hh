@@ -91,7 +91,7 @@ namespace Dune {
         using EntitySet = typename GFS::Traits::EntitySet;
         using Cell = typename EntitySet::Traits::Element;
         using IndexSet = typename EntitySet::Traits::IndexSet;
-        typedef typename GFS::Traits::SizeType size_type;
+        typedef typename IndexSet::IndexType size_type;
 
         static const auto dim = EntitySet::dimension;
 
@@ -139,8 +139,7 @@ namespace Dune {
 
       template<typename LFS, typename Data>
       class DGFTreeLeafFunction
-        : public TypeTree::LeafNode
-        , public GridFunctionInterface<GridFunctionTraits<
+        : public GridFunctionBase<GridFunctionTraits<
                                          typename LFS::Traits::GridView,
                                          typename BasisInterfaceSwitch<
                                            typename FiniteElementInterfaceSwitch<
@@ -168,7 +167,7 @@ namespace Dune {
             >::Basis
           > BasisSwitch;
 
-        typedef GridFunctionInterface<
+        typedef GridFunctionBase<
           GridFunctionTraits<
             typename LFS::Traits::GridView,
             typename BasisSwitch::RangeField,
@@ -229,8 +228,7 @@ namespace Dune {
 
       template<typename LFS, typename Data>
       class DGFTreeVectorFunction
-        : public TypeTree::LeafNode
-        , public GridFunctionInterface<GridFunctionTraits<
+        : public GridFunctionBase<GridFunctionTraits<
                                          typename LFS::Traits::GridView,
                                          typename BasisInterfaceSwitch<
                                            typename FiniteElementInterfaceSwitch<
@@ -260,7 +258,7 @@ namespace Dune {
         static_assert(BasisSwitch::dimRange == 1,
                       "Automatic conversion to vector-valued function only supported for scalar components");
 
-        typedef GridFunctionInterface<
+        typedef GridFunctionBase<
           GridFunctionTraits<
             typename LFS::Traits::GridView,
             typename BasisSwitch::RangeField,

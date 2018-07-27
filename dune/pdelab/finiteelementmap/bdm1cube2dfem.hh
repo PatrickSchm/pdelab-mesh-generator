@@ -24,6 +24,9 @@ namespace Dune {
       //! \brief export type of the signature
       typedef LocalFiniteElementMapTraits<FE> Traits;
 
+      //! The dimension of the finite elements returned by this map.
+      static constexpr int dimension = GV::dimension;
+
       //! \brief Use when Imp has a standard constructor
       BDM1Cube2DLocalFiniteElementMap(const GV& gv_)
         : gv(gv_), is(gv_.indexSet()), orient(gv_.size(0))
@@ -58,17 +61,17 @@ namespace Dune {
         return variant[orient[is.index(e)]];
       }
 
-      bool fixedSize() const
+      static constexpr bool fixedSize()
       {
         return true;
       }
 
-      bool hasDOFs(int codim) const
+      static constexpr bool hasDOFs(int codim)
       {
         return codim == 1;
       }
 
-      std::size_t size(GeometryType gt) const
+      static constexpr std::size_t size(GeometryType gt)
       {
         switch (gt.dim())
           {
@@ -79,7 +82,7 @@ namespace Dune {
           }
       }
 
-      std::size_t maxLocalSize() const
+      static constexpr std::size_t maxLocalSize()
       {
         return 8;
       }

@@ -43,12 +43,12 @@ namespace Dune
        */
       template<typename GFSV, typename GFSU, typename ET, int _Options>
       class MatrixContainer
-        : public Backend::impl::Wrapper<::Eigen::SparseMatrix<ET,_Options>>
+        : public Backend::impl::Wrapper<::Eigen::SparseMatrix<ET,_Options,int>>
       {
 
       public:
 
-        typedef ::Eigen::SparseMatrix<ET,_Options> Container;
+        typedef ::Eigen::SparseMatrix<ET,_Options,int> Container;
 
       private:
 
@@ -237,8 +237,8 @@ namespace Dune
         static void allocate_matrix(std::shared_ptr<Container> & c, const GO & go, const ElementType& e)
         {
           // guess size
-          int rows = go.testGridFunctionSpace().ordering().blockCount();
-          int cols = go.trialGridFunctionSpace().ordering().blockCount();
+          long int rows = go.testGridFunctionSpace().ordering().blockCount();
+          long int cols = go.trialGridFunctionSpace().ordering().blockCount();
           c->resize(rows,cols);
           size_type nz = go.matrixBackend().avg_nz_per_row;
           if (nz)

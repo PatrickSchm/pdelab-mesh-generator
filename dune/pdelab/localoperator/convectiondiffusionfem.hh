@@ -1,11 +1,12 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSIONFEM_HH
 #define DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSIONFEM_HH
 
 #include<vector>
 
+#include<dune/geometry/referenceelements.hh>
+
 #include<dune/pdelab/common/quadraturerules.hh>
-#include<dune/pdelab/common/referenceelements.hh>
 #include<dune/pdelab/localoperator/pattern.hh>
 #include<dune/pdelab/localoperator/flags.hh>
 #include<dune/pdelab/localoperator/idefault.hh>
@@ -1004,8 +1005,6 @@ namespace Dune {
 
     };
 
-
-
-  }
-}
+  } // end namespace PDELab
+} // end namespace Dune
 #endif // DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSIONFEM_HH

@@ -173,7 +173,6 @@ namespace Dune {
 
         // assemble matrix; optional: assemble only on demand!
         watch.reset();
-
         if (!_jacobian)
           {
             _jacobian = std::make_shared<M>(_go);
@@ -229,7 +228,7 @@ namespace Dune {
         watch.reset();
         V z(_go.trialGridFunctionSpace(),0.0);
         auto red = std::max(_reduction,_min_defect/defect);
-        if (_go.trialGridFunctionSpace().gridView().comm().rank()==0)
+        if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
         {
           std::cout << "=== solving (reduction: " << red << ") ";
           if (_verbose>=1)
